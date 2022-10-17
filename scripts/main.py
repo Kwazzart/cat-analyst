@@ -18,7 +18,6 @@ if __name__ == "__main__":
     application = ApplicationBuilder().token(Constants.TOKEN).read_timeout(30).write_timeout(30).build()
     
     application.add_handler(CommandHandler('start', R.start))
-    application.add_handler(CommandHandler('caps', R.caps))
     application.add_handler(MessageHandler(filters.Document.ALL, R.get_document))
     application.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), R.echo))
     application.add_handler(MessageHandler(filters.COMMAND, R.unknown))
