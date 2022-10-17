@@ -7,7 +7,7 @@ import logging
 import asyncio
 
 from telegram import Update
-from telegram.ext import filters, ApplicationBuilder, ContextTypes, MessageHandler, CommandHandler
+from telegram.ext import filters, ApplicationBuilder, ContextTypes, MessageHandler, CommandHandler``
 
 #logs activate
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -16,7 +16,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 
 if __name__ == "__main__":
     
-    application = ApplicationBuilder().token(Constants.TOKEN).build()
+    application = ApplicationBuilder().token(Constants.TOKEN).read_timeout(30).write_timeout(30).build()
     
     application.add_handler(CommandHandler('start', R.start))
     application.add_handler(CommandHandler('caps', R.caps))

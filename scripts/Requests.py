@@ -1,5 +1,6 @@
 import asyncio
 import Constants
+from read_data import *
 
 async def start(update, context): 
     await context.bot.send_message(
@@ -28,9 +29,16 @@ async def echo(update, context):
     )
     
 async def get_document(update, context):
-    ID = Constants.ID
+    
+    with open('D:/pet-projects/cat-analyst/id.txt', 'r') as file:
+        ID = int(file.read())
+        
     await (await context.bot.get_file(update.message.document)).download(f'./cat-analyst/data/inputs/D{ID}.csv')
-    Constants.ID += 1 
+    
+    print(read_data())
+    
+    with open('D:/pet-projects/cat-analyst/id.txt', 'w') as file:
+        file.write(str(ID+1))
 
 async def unknown(update, context):
     text = 'Прости, я не знаю такую команду :(.\nНапиши /help, чтобы я смог помочь тебе!'
