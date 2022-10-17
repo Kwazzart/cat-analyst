@@ -1,5 +1,6 @@
 #imports
 #from asyncore import dispatcher // непонятный импот
+from email.message import Message
 import Constants
 import Requests as R
 import logging
@@ -19,6 +20,7 @@ if __name__ == "__main__":
     
     application.add_handler(CommandHandler('start', R.start))
     application.add_handler(CommandHandler('caps', R.caps))
+    application.add_handler(MessageHandler(filters.Document.ALL, R.get_document))
     application.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), R.echo))
     application.add_handler(MessageHandler(filters.COMMAND, R.unknown))
     

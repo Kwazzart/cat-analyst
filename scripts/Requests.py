@@ -1,4 +1,5 @@
 import asyncio
+import Constants
 
 async def start(update, context): 
     await context.bot.send_message(
@@ -25,6 +26,11 @@ async def echo(update, context):
         chat_id=update.effective_chat.id, 
         text=text
     )
+    
+async def get_document(update, context):
+    ID = Constants.ID
+    await (await context.bot.get_file(update.message.document)).download(f'./cat-analyst/data/inputs/D{ID}.csv')
+    Constants.ID += 1 
 
 async def unknown(update, context):
     text = 'Прости, я не знаю такую команду :(.\nНапиши /help, чтобы я смог помочь тебе!'
