@@ -1,7 +1,9 @@
+import asyncio
+
 async def start(update, context): 
     await context.bot.send_message(
         chat_id=update.effective_chat.id, 
-        text='иди нах)'
+        text='Привет, я Кот-Аналитик!\nПришли мне csv файл своих данных, и я проанализирую их за тебя.\nЕсли возникнут вопросы, пиши /help'
     )
  
 async def caps(update, context):
@@ -18,8 +20,15 @@ async def caps(update, context):
         )
          
 async def echo(update, context):
-    text = 'ладно все заткнись'
+    text = update.message.text
     await context.bot.send_message(
         chat_id=update.effective_chat.id, 
+        text=text
+    )
+
+async def unknown(update, context):
+    text = 'Прости, я не знаю такую команду :(.\nНапиши /help, чтобы я смог помочь тебе!'
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
         text=text
     )

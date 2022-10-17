@@ -3,6 +3,7 @@
 import Constants
 import Requests as R
 import logging
+import asyncio
 
 from telegram import Update
 from telegram.ext import filters, ApplicationBuilder, ContextTypes, MessageHandler, CommandHandler
@@ -19,6 +20,7 @@ if __name__ == "__main__":
     application.add_handler(CommandHandler('start', R.start))
     application.add_handler(CommandHandler('caps', R.caps))
     application.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), R.echo))
-
+    application.add_handler(MessageHandler(filters.COMMAND, R.unknown))
+    
     application.run_polling()
 
