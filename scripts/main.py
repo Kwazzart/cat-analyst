@@ -1,13 +1,12 @@
 #imports
 #from asyncore import dispatcher // непонятный импот
-from email.message import Message
 import Constants
 import Requests as R
 import logging
 import asyncio
 
 from telegram import Update
-from telegram.ext import filters, ApplicationBuilder, ContextTypes, MessageHandler, CommandHandler``
+from telegram.ext import filters, ApplicationBuilder, ContextTypes, MessageHandler, CommandHandler
 
 #logs activate
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
