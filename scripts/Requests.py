@@ -32,7 +32,7 @@ async def get_document(update, context):
     with open(f'{Constants.DATA_URL}/cat-analyst/id.txt', 'r') as file:
         ID = int(file.read())
         
-    await (await context.bot.get_file(update.message.document)).download(f'./cat-analyst/data/inputs/D{ID}.csv')
+    await (await context.bot.get_file(update.message.document)).download(f'{Constants.DATA_URL}/cat-analyst/data/inputs/D{ID}.csv')
     
     print(read_data())
     
