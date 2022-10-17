@@ -1,8 +1,8 @@
 #importing
+import logging
 import telegram
 from telegram.ext import Updater
 from telegram.ext import CommandHandler
-import logging
 from telegram.ext import MessageHandler, Filters
 
 #main variables
