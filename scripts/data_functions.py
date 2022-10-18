@@ -13,10 +13,39 @@ def get_data_variables(data):
     n_cat_features = len(cat_features)
     num_features = list(data.select_dtypes(np.number).columns.array)
     n_num_features = len(num_features)
+    n_nan = data.isna().sum().sum()
     
     var_dict = {"n_samples":n_samples, "n_features":n_features,
             "cat_features":" ".join(cat_features), "n_cat_features":n_cat_features,
-            "num_features":" ".join(num_features), "n_num_features":n_num_features}
-    print(var_dict)
+            "num_features":" ".join(num_features), "n_num_features":n_num_features, "n_nan":n_nan}
+    
     return var_dict
+
+def auto_preproccecing(data):
+    data = data.copy()
+    isna_df = data.isna().sum()/len(data)
+    na_features_to_drop = isna_df[isna_df >= 0.7].index.values
+    
+    cat_features = data.select_dtypes("O").columns.array
+    num_features = data.select_dtypes(np.number).columns.array
+    
+    for feature in cat_features:
+        data[feature] = data[feature].fillna(data[feature].mode()[0])
+        
+    for feature in num_features:
+        data[feature] = data[feature].fillna(data[feature].median())
+        
+    nunique_df = pd.DataFrame()
+    
+    for feature in data.drop(na_features_to_drop, axis=1).select_dtypes("O").columns.values:
+        nunique_df.loc[feature, "n_unique"] = data[feature].nunique()
+    
+    print(nunique_df)
+    
+    many_unique_values_features_to_drop = nunique_df.loc[nunique_df["n_unique"] > 30, "n_unique"].index.values
+    
+    data = data.drop(na_features_to_drop, axis=1)
+    data = data.drop(many_unique_values_features_to_drop, axis = 1)
+    return data
+    
     
