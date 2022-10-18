@@ -6,11 +6,4 @@ DATA_URL = str(os.getcwd())
 #FOR DIMA
 #DATA_URL = '/Users/dmitrysakharov/Documents/Bot_analyst' 
 ID = None
-DATA = None
-DATA_VARS = None
-<<<<<<< HEAD
 
-=======
-
-
->>>>>>> 1df16803bf73d627c426f5c37e154ba2991bcae6

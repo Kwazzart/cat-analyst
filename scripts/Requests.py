@@ -1,67 +1,85 @@
+from fileinput import filename
+from xml.dom.minidom import Document
 from data_functions import *
-import Constants
-from telegram.ext import * 
-from telegram import * 
+from utilities import *
+import Constants 
+from telegram import InlineKeyboardMarkup
 import pandas as pd
 
 async def start(update, context): 
     await context.bot.send_message(
         chat_id=update.effective_chat.id, 
-        text='Привет, я Кот-Аналитик!\nПришли мне csv файл своих данных, и я проанализирую их за тебя.\nЕсли возникнут вопросы, пиши /help'
+        text='Привет, я Кот-Аналитик!\nПришли мне csv файл своих данных, и я проанализирую их за тебя! Очень удобно!\n\nТОЛЬКО УЧТИ! Тебе следует убедиться, что качественные признаки в твоих данных (например: пол, цвет, страна и т.п.) имеют текстовые значения, а не числовые!\n\nЕсли возникнут вопросы, пиши /help'
     )
-         
+    
+async def instraction(update, context):
+    await context.bot.send_message(   
+        chat_id = update.effective_chat.id,
+        text = "Для работы со мной тебе следует отправить файл формата .csv с твоими данными. ОЧЕНЬ ВАЖНО - убедись, что значения качественных признаков введены текстом, а не числом (Пол 1,0 должны быть мужчина, женщина, например). Сделаем нашу совместную работу проще!"
+    )
+async def help(update, context):
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id, 
+        text="Вот список команд, которые я знаю:\n/start - Приветственная команда с требованием к данным\n/instraction - инструкция по работе со мной\n"
+        )
 async def echo(update, context):
     text = update.message.text.lower()
-    data = Constants.DATA
-    if text in ['обработка', 'обработать', 'предобработка', 'предобработать']:
-        data = auto_preproccecing(data)
-        data_vars = get_data_variables(data)
-        
-        await context.bot.send_message(
-            chat_id = update.effective_chat.id,
-            text = str(data_vars)
-        )
+    if "люблю" in text:
+         await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text = "Я тебя люблю :3"
+        )   
     
 async def get_document(update, context):
     
-    with open(f'{Constants.DATA_URL}/cat-analyst/id.txt', 'r') as file:
-        ID = int(file.read())
+    ID = str(update.effective_chat.id)
         
     await (await context.bot.get_file(update.message.document)).download(f'{Constants.DATA_URL}/cat-analyst/data/inputs/D{ID}.csv')
     
     data = read_data(ID)
-    data_vars = get_data_variables(data)
+    data_vars = get_data_variables(data, ID)
     
     Constants.ID = ID
-    Constants.DATA = data
-    Constants.DATA_VARS = data_vars
     
-    text = f"DATA INFO:\nnumber of samples: {data_vars['n_samples']},\nnumber of features: {data_vars['n_features']}\nnumber of categorical features: {data_vars['n_cat_features']}\nnumber of numeric features: {data_vars['n_num_features']}" + "\n\nCategorical features: \n" + data_vars["cat_features"] + "\n\nNumeric features: \n" + data_vars["num_features"] + "\n\nn nan values: " + str(data_vars["n_nan"])
+    text = f"ИНФОРМАЦИЯ О ДАТАСЕТЕ:\nКоличество объектов в данных: {data_vars['n_samples']},\nКоличество признаков: {data_vars['n_features']}\nКоличество качественных переменных: {data_vars['n_cat_features']}\nКоличество числовых переменных: {data_vars['n_num_features']}" + "\n\nКачественные переменные: \n" + data_vars["cat_features"] + "\n\Количественные переменные: \n" + data_vars["num_features"] + "\n\nКоличество пропущенных значений: " + str(data_vars["n_nan"])
     await context.bot.send_message(
         chat_id = update.effective_chat.id,
         text = text
     )
 
-    buttons = [[InlineKeyboardButton('Нет, не нужна', callback_data = 'No122121218821827178' )],
-    [InlineKeyboardButton('Да, нужна ', callback_data = 'Yes122121218821827178' )]]
-    await context.bot.send_message(chat_id = update.effective_chat.id, text = 'Нужна ли предобработка данных? (работа с выбросами и пропущенными значениями) \nПредобработка данных рекомендуется для использования статистических методов и методов машинного обучения. \nПредобработка данных не рекомендуется, если Вам нужна только описательная статистика данных.', 
+    buttons = create_buttons([('Нет, не нужна', 'No122121218821827178'), ('Да, нужна', 'Yes122121218821827178')])
+
+    await context.bot.send_message(chat_id = update.effective_chat.id, text = 'Нужна ли предобработка данных? (работа с выбросами и пропущенными значениями) \n\nПредобработка данных рекомендуется для использования статистических методов и алгоритмов машинного обучения. \nПредобработка данных необязательна, если Вам нужна только описательная статистика данных.', 
     reply_markup = InlineKeyboardMarkup(buttons))
     
-    with open(f'{Constants.DATA_URL}/cat-analyst/id.txt', 'w') as file:
-        file.write(str(ID+1))
-
 async def unknown(update, context):
     text = 'Прости, я не знаю такую команду :(.\nНапиши /help, чтобы я смог помочь тебе!'
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text=str(Constants.DATA_VARS)
+        text=text
     )
 
-async def buttons_helper(update, context):
+async def get_buttons_callbacks(update, context):
     query = update.callback_query
     q_data = query.data
     await query.answer()
     if 'No122121218821827178' in q_data: 
-        await context.bot.send_message(chat_id = update.effective_chat.id, text = 'Понял, не нужно')
+        await context.bot.send_message(chat_id = update.effective_chat.id, text = 'А ты не из робких!')
+        
+        #with open(f"{Constants.DATA_URL}/cat-analyst/data/inputs/D{Constants.ID}.csv", "rb") as file:
+        #    await context.bot.send_document(chat_id = update.effective_chat.id, document=file, filename="testdf.csv")
+            
     elif 'Yes122121218821827178' in q_data: 
-        await context.bot.send_message(chat_id = update.effective_chat.id, text = 'Понял, нужно')
+        await context.bot.send_message(chat_id = update.effective_chat.id, text = 'Понял, сейчас обработаю!')
+        
+        ID = Constants.ID
+        data = pd.read_csv(f"{Constants.DATA_URL}/cat-analyst/data/inputs/D{ID}.csv")
+        data, na_drops, many_drops = auto_preproccecing(data, ID)
+        
+        await context.bot.send_message(chat_id = update.effective_chat.id, text = 'Данные обработаны. Теперь анализ пойдёт как по маслу!')
+        
+        text = f"Удалённые признаки по критерию потерянных значений (>70%):\n{', '.join(na_drops)}\n\nУдалённые признаки по критерию уникальных качественных значений на тысячу объектов (>30/1000):\n{', '.join(many_drops)}"
+        await context.bot.send_message(
+            chat_id = update.effective_chat.id,
+            text = text
+        )

@@ -1,11 +1,7 @@
-def text_data_info(data_vars):
-    pass
+from telegram import InlineKeyboardButton
 
-def read_txt_file(url):
-    pass
-
-def write_txt_file(url):
-    pass
-
-def read_dict(url):
-    pass
+def create_buttons(arr):
+    buttons = []
+    for text, cd in arr:
+        buttons.append([InlineKeyboardButton(text, callback_data = cd)])
+    return buttons
