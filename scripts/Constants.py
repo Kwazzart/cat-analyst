@@ -6,3 +6,4 @@ DATA_URL = str(os.getcwd())
 ID = None
 DATA = None
 DATA_VARS = None
+SKEW_DF = None

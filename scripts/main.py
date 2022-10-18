@@ -3,7 +3,6 @@
 import Constants
 import Requests as R
 import logging
-import asyncio
 
 from telegram import Update
 from telegram.ext import filters, ApplicationBuilder, ContextTypes, MessageHandler, CommandHandler
