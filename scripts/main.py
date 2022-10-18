@@ -7,6 +7,8 @@ import asyncio
 
 from telegram import Update
 from telegram.ext import filters, ApplicationBuilder, ContextTypes, MessageHandler, CommandHandler
+from telegram import *
+from telegram.ext import *
 
 #logs activate
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',

@@ -2,6 +2,7 @@ from data_functions import *
 import Constants
 from telegram.ext import * 
 from telegram import * 
+import pandas as pd
 
 async def start(update, context): 
     await context.bot.send_message(
@@ -10,11 +11,16 @@ async def start(update, context):
     )
          
 async def echo(update, context):
-    text = update.message.text
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id, 
-        text=text
-    )
+    text = update.message.text.lower()
+    data = Constants.DATA
+    if text in ['обработка', 'обработать', 'предобработка', 'предобработать']:
+        data = auto_preproccecing(data)
+        data_vars = get_data_variables(data)
+        
+        await context.bot.send_message(
+            chat_id = update.effective_chat.id,
+            text = str(data_vars)
+        )
     
 async def get_document(update, context):
     
@@ -26,7 +32,11 @@ async def get_document(update, context):
     data = read_data(ID)
     data_vars = get_data_variables(data)
     
-    text = f"DATA INFO:\nnumber of samples: {data_vars['n_samples']},\nnumber of features: {data_vars['n_features']}\nnumber of categorical features: {data_vars['n_cat_features']}\nnumber of numeric features: {data_vars['n_num_features']}" + "\nCategorical features: " + data_vars["cat_features"] + "\nNumeric features: " + data_vars["num_features"]
+    Constants.ID = ID
+    Constants.DATA = data
+    Constants.DATA_VARS = data_vars
+    
+    text = f"DATA INFO:\nnumber of samples: {data_vars['n_samples']},\nnumber of features: {data_vars['n_features']}\nnumber of categorical features: {data_vars['n_cat_features']}\nnumber of numeric features: {data_vars['n_num_features']}" + "\n\nCategorical features: \n" + data_vars["cat_features"] + "\n\nNumeric features: \n" + data_vars["num_features"] + "\n\nn nan values: " + str(data_vars["n_nan"])
     await context.bot.send_message(
         chat_id = update.effective_chat.id,
         text = text
@@ -44,7 +54,7 @@ async def unknown(update, context):
     text = 'Прости, я не знаю такую команду :(.\nНапиши /help, чтобы я смог помочь тебе!'
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text=text
+        text=str(Constants.DATA_VARS)
     )
 
 async def buttons_helper(update, context):
