@@ -1,5 +1,7 @@
 from data_functions import *
 import Constants
+from telegram.ext import * 
+from telegram import * 
 
 async def start(update, context): 
     await context.bot.send_message(
@@ -29,6 +31,11 @@ async def get_document(update, context):
         chat_id = update.effective_chat.id,
         text = text
     )
+
+    buttons = [[InlineKeyboardButton('Нет, не нужна', callback_data = 'No122121218821827178' )],
+    [InlineKeyboardButton('Да, нужна ', callback_data = 'Yes122121218821827178' )]]
+    await context.bot.send_message(chat_id = update.effective_chat.id, text = 'Нужна ли предобработка данных? (работа с выбросами и пропущенными значениями) \nПредобработка данных рекомендуется для использования статистических методов и методов машинного обучения. \nПредобработка данных не рекомендуется, если Вам нужна только описательная статистика данных.', 
+    reply_markup = InlineKeyboardMarkup(buttons))
     
     with open(f'{Constants.DATA_URL}/cat-analyst/id.txt', 'w') as file:
         file.write(str(ID+1))
@@ -39,3 +46,12 @@ async def unknown(update, context):
         chat_id=update.effective_chat.id,
         text=text
     )
+
+async def buttons_helper(update, context):
+    query = update.callback_query
+    q_data = query.data
+    await query.answer()
+    if 'No122121218821827178' in q_data: 
+        await context.bot.send_message(chat_id = update.effective_chat.id, text = 'Понял, не нужно')
+    elif 'Yes122121218821827178' in q_data: 
+        await context.bot.send_message(chat_id = update.effective_chat.id, text = 'Понял, нужно')
