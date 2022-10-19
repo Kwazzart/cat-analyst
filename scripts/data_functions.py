@@ -1,9 +1,11 @@
 import pandas as pd
-from pandas.plotting import table 
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt 
+import seaborn as sns
 import numpy as np
 import Constants
 import scipy.stats as stats
+
+pd.set_option('display.float_format', lambda x: '%.3f' % x)
 
 def read_data(ID):
     data = pd.read_csv(f"{Constants.DATA_URL}/cat-analyst/data/inputs/D{ID}.csv", index_col=0)
@@ -63,7 +65,22 @@ def auto_preproccecing(data, ID):
 
 def get_corr(data, ID):
     corr = data.select_dtypes(np.number).corr()
+    corr = corr.round(4)
+    
+    cols = data.select_dtypes(np.number).columns.array
+    pval_df = pd.DataFrame()
+    for col1 in cols:
+        for col2 in cols:
+            _, p_val = stats.pearsonr(data[col1], data[col2])
+            pval_df.loc[col1, col2] = p_val
+    pval_df = pval_df.round(4)
+    
+    fig_corr = sns.heatmap(corr, annot=True, center=True)
+    fig = fig_corr.get_figure()
+    fig.savefig(f"{Constants.DATA_URL}/cat-analyst/data/img/snscorr{ID}.png")
+    
     corr.to_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/corr{ID}.csv")
+    pval_df.to_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/p_val{ID}.csv")
     
     return corr
     

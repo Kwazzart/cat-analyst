@@ -85,7 +85,7 @@ async def get_buttons_callbacks(update, context):
                                   ('Корреляция (связь количественных признаков)', 'corr122121218821827178'),
                                   ('Сравнение двух выборок (t-test/Манна-Уитни)', 'two122121218821827178'),
                                   ('Машинное обучение (классификация/корреляция)', 'ml122121218821827178'),
-                                  ('Всё! Скачай обработанные данные!', 'dow122121218821827178')])
+                                  ('Стоп! Скачай обработанные данные!', 'dow122121218821827178')])
         
         await context.bot.send_message(
             chat_id = update.effective_chat.id,
@@ -103,6 +103,14 @@ async def get_buttons_callbacks(update, context):
         
     elif 'corrauto122121218821827178' in q_data:
         ID = str(update.effective_chat.id)
-        data = pd.read_csv(f"{Constants.DATA_URL}/cat-analyst/") 
+        data = pd.read_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/D{ID}.csv", index_col=0)
+        corr = get_corr(data, ID)
+        
+        with open(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/corr{ID}.csv", "rb") as file:
+            await context.bot.send_document(chat_id = update.effective_chat.id, document=file, filename="corrmatrix.csv")
+        with open(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/p_val{ID}.csv", "rb") as file:
+            await context.bot.send_document(chat_id = update.effective_chat.id, document=file, filename="p_values.csv")
+        with open(f"{Constants.DATA_URL}/cat-analyst/data/img/snscorr{ID}.png", "rb") as file:
+            await context.bot.send_photo(chat_id = update.effective_chat.id, photo=file, filename="corrmatrix2.png")  
         
         
