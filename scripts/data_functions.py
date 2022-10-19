@@ -1,4 +1,6 @@
 import pandas as pd
+from pandas.plotting import table 
+import matplotlib.pyplot as plt
 import numpy as np
 import Constants
 import scipy.stats as stats
@@ -42,7 +44,7 @@ def auto_preproccecing(data, ID):
     
     many_unique_values_features_to_drop = nunique_df.loc[nunique_df["n_unique"] > 0.03, "n_unique"].index.values
     
-    data = data.drop(na_features_to_drop, axis=1)
+    data = data.drop(na_features_to_drop, axis = 1)
     data = data.drop(many_unique_values_features_to_drop, axis = 1)
     
     skew_df = pd.DataFrame({"features":data.select_dtypes(np.number).columns.values}).set_index("features")
@@ -52,9 +54,18 @@ def auto_preproccecing(data, ID):
             data[feature] = np.log1p(data[feature])
     skew_df["skew_new"] = stats.skew(data.select_dtypes(np.number))
     
+    
+    
     skew_df.to_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/skew_df{ID}.csv")
     data.to_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/D{ID}.csv")
     
     return data, na_features_to_drop, many_unique_values_features_to_drop
+
+def get_corr(data, ID):
+    corr = data.select_dtypes(np.number).corr()
+    corr.to_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/corr{ID}.csv")
+    
+    return corr
+    
     
     

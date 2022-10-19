@@ -1,5 +1,3 @@
-from fileinput import filename
-from xml.dom.minidom import Document
 from data_functions import *
 from utilities import *
 import Constants 
@@ -39,8 +37,6 @@ async def get_document(update, context):
     data = read_data(ID)
     data_vars = get_data_variables(data, ID)
     
-    Constants.ID = ID
-    
     text = f"ИНФОРМАЦИЯ О ДАТАСЕТЕ:\nКоличество объектов в данных: {data_vars['n_samples']},\nКоличество признаков: {data_vars['n_features']}\nКоличество качественных переменных: {data_vars['n_cat_features']}\nКоличество числовых переменных: {data_vars['n_num_features']}" + "\n\nКачественные переменные: \n" + data_vars["cat_features"] + "\n\Количественные переменные: \n" + data_vars["num_features"] + "\n\nКоличество пропущенных значений: " + str(data_vars["n_nan"])
     await context.bot.send_message(
         chat_id = update.effective_chat.id,
@@ -66,14 +62,15 @@ async def get_buttons_callbacks(update, context):
     if 'No122121218821827178' in q_data: 
         await context.bot.send_message(chat_id = update.effective_chat.id, text = 'А ты не из робких!')
         
-        #with open(f"{Constants.DATA_URL}/cat-analyst/data/inputs/D{Constants.ID}.csv", "rb") as file:
-        #    await context.bot.send_document(chat_id = update.effective_chat.id, document=file, filename="testdf.csv")
+        ID = update.effective_chat.id
+        pd.read_csv(f"{Constants.DATA_URL}/cat-analyst/data/inputs/D{ID}.csv", index_col=0).to_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/D{ID}.csv")
             
     elif 'Yes122121218821827178' in q_data: 
         await context.bot.send_message(chat_id = update.effective_chat.id, text = 'Понял, сейчас обработаю!')
         
-        ID = Constants.ID
-        data = pd.read_csv(f"{Constants.DATA_URL}/cat-analyst/data/inputs/D{ID}.csv")
+        ID = str(update.effective_chat.id)
+            
+        data = pd.read_csv(f"{Constants.DATA_URL}/cat-analyst/data/inputs/D{ID}.csv", index_col=0)
         data, na_drops, many_drops = auto_preproccecing(data, ID)
         
         await context.bot.send_message(chat_id = update.effective_chat.id, text = 'Данные обработаны. Теперь анализ пойдёт как по маслу!')
@@ -83,3 +80,29 @@ async def get_buttons_callbacks(update, context):
             chat_id = update.effective_chat.id,
             text = text
         )
+        
+        buttons = create_buttons([('Описательная статистика (графики)', 'desc122121218821827178'),
+                                  ('Корреляция (связь количественных признаков)', 'corr122121218821827178'),
+                                  ('Сравнение двух выборок (t-test/Манна-Уитни)', 'two122121218821827178'),
+                                  ('Машинное обучение (классификация/корреляция)', 'ml122121218821827178'),
+                                  ('Всё! Скачай обработанные данные!', 'dow122121218821827178')])
+        
+        await context.bot.send_message(
+            chat_id = update.effective_chat.id,
+            text = "Данные предобработаны, что будем делать дальше?",
+            reply_markup = InlineKeyboardMarkup(buttons))
+    
+    elif 'corr122121218821827178' in q_data:
+        buttons = create_buttons([('Авто', 'corrauto122121218821827178'),
+                                  ('Пирсон (параметрический тест)', 'pirson122121218821827178'),
+                                  ('Спирмен (непараметрический тест)', 'sperman122121218821827178')])
+        await context.bot.send_message(
+            chat_id = update.effective_chat.id,
+            text = "Корреляция значит. Ага. Готовься получить корреляционную матрицу!",
+            reply_markup = InlineKeyboardMarkup(buttons))
+        
+    elif 'corrauto122121218821827178' in q_data:
+        ID = str(update.effective_chat.id)
+        data = pd.read_csv(f"{Constants.DATA_URL}/cat-analyst/") 
+        
+        
