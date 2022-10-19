@@ -61,7 +61,22 @@ def auto_preproccecing(data, ID):
     skew_df.to_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/skew_df{ID}.csv")
     data.to_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/D{ID}.csv")
     
-    return data, na_features_to_drop, many_unique_values_features_to_drop
+    rows_before = data.shape[0]
+    common_mode = []
+    for feature in data.select_dtypes(np.number).columns.values:
+        moda = data[feature].mode()
+        data_n = data[data[feature] == moda.values[0]].shape[0]/data.shape[0] 
+        if data_n < 0.5:
+                common_mode.append(feature)
+    for feature in common_mode:
+        q1 = data[feature].quantile(q=0.25)
+        q3 = data[feature].quantile(q=0.75)
+        iqr = q3-q1
+        data = data.drop(data[data[feature] < (q1- 3 * iqr)].index)
+        data = data.drop(data[data[feature] > (q3+ 3 * iqr)].index)
+    rows_after = data.shape[0]
+
+    return data, na_features_to_drop, many_unique_values_features_to_drop, rows_before, rows_after
 
 def get_corr(data, ID):
     corr = data.select_dtypes(np.number).corr()
