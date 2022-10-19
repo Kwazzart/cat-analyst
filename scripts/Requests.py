@@ -71,11 +71,11 @@ async def get_buttons_callbacks(update, context):
         ID = str(update.effective_chat.id)
             
         data = pd.read_csv(f"{Constants.DATA_URL}/cat-analyst/data/inputs/D{ID}.csv", index_col=0)
-        data, na_drops, many_drops = auto_preproccecing(data, ID)
+        data, na_drops, many_drops, r_before, r_after = auto_preproccecing(data, ID)
         
         await context.bot.send_message(chat_id = update.effective_chat.id, text = 'Данные обработаны. Теперь анализ пойдёт как по маслу!')
         
-        text = f"Удалённые признаки по критерию потерянных значений (>70%):\n{', '.join(na_drops)}\n\nУдалённые признаки по критерию уникальных качественных значений на тысячу объектов (>30/1000):\n{', '.join(many_drops)}"
+        text = f"Удалённые признаки по критерию потерянных значений (>70%):\n{', '.join(na_drops)}\n\nУдалённые признаки по критерию уникальных качественных значений на тысячу объектов (>30/1000):\n{', '.join(many_drops)}\n\nСколько осталось значений после удаления выбросов:\n{r_after} из {r_before}"
         await context.bot.send_message(
             chat_id = update.effective_chat.id,
             text = text
