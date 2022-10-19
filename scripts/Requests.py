@@ -104,7 +104,7 @@ async def get_buttons_callbacks(update, context):
     elif 'corrauto122121218821827178' in q_data:
         ID = str(update.effective_chat.id)
         data = pd.read_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/D{ID}.csv", index_col=0)
-        corr = get_corr(data, ID)
+        corr = get_corr_pearson(data, ID)
         
         with open(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/corr{ID}.csv", "rb") as file:
             await context.bot.send_document(chat_id = update.effective_chat.id, document=file, filename="corrmatrix.csv")
@@ -112,5 +112,30 @@ async def get_buttons_callbacks(update, context):
             await context.bot.send_document(chat_id = update.effective_chat.id, document=file, filename="p_values.csv")
         with open(f"{Constants.DATA_URL}/cat-analyst/data/img/snscorr{ID}.png", "rb") as file:
             await context.bot.send_photo(chat_id = update.effective_chat.id, photo=file, filename="corrmatrix2.png")  
+            
+    elif 'sperman122121218821827178' in q_data:
+        ID = str(update.effective_chat.id)
+        data = pd.read_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/D{ID}.csv", index_col=0)
+        corr = get_corr_spearman(data, ID)
+        
+        with open(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/corr{ID}.csv", "rb") as file:
+            await context.bot.send_document(chat_id = update.effective_chat.id, document=file, filename="corrmatrix.csv")
+        with open(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/p_val{ID}.csv", "rb") as file:
+            await context.bot.send_document(chat_id = update.effective_chat.id, document=file, filename="p_values.csv")
+        with open(f"{Constants.DATA_URL}/cat-analyst/data/img/snscorr{ID}.png", "rb") as file:
+            await context.bot.send_photo(chat_id = update.effective_chat.id, photo=file, filename="corrmatrix2.png") 
+            
+    elif 'pirson122121218821827178' in q_data:
+        ID = str(update.effective_chat.id)
+        data = pd.read_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/D{ID}.csv", index_col=0)
+        corr = get_corr_pearson(data, ID)
+        
+        with open(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/corr{ID}.csv", "rb") as file:
+            await context.bot.send_document(chat_id = update.effective_chat.id, document=file, filename="corrmatrix.csv")
+        with open(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/p_val{ID}.csv", "rb") as file:
+            await context.bot.send_document(chat_id = update.effective_chat.id, document=file, filename="p_values.csv")
+        with open(f"{Constants.DATA_URL}/cat-analyst/data/img/snscorr{ID}.png", "rb") as file:
+            await context.bot.send_photo(chat_id = update.effective_chat.id, photo=file, filename="corrmatrix2.png") 
+    
         
         

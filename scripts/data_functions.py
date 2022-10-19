@@ -72,13 +72,55 @@ def auto_preproccecing(data, ID):
         q1 = data[feature].quantile(q=0.25)
         q3 = data[feature].quantile(q=0.75)
         iqr = q3-q1
-        data = data.drop(data[data[feature] < (q1- 3 * iqr)].index)
-        data = data.drop(data[data[feature] > (q3+ 3 * iqr)].index)
+        data = data.drop(data[data[feature] < (q1 - 2.25 * iqr)].index)
+        data = data.drop(data[data[feature] > (q3 + 2.25 * iqr)].index)
     rows_after = data.shape[0]
 
     return data, na_features_to_drop, many_unique_values_features_to_drop, rows_before, rows_after
 
-def get_corr(data, ID):
+def get_corr_pearson(data, ID):
+    corr = data.select_dtypes(np.number).corr()
+    corr = corr.round(4)
+    
+    cols = data.select_dtypes(np.number).columns.array
+    pval_df = pd.DataFrame()
+    for col1 in cols:
+        for col2 in cols:
+            _, p_val = stats.pearsonr(data[col1], data[col2])
+            pval_df.loc[col1, col2] = p_val
+    pval_df = pval_df.round(4)
+    
+    fig_corr = sns.heatmap(corr, annot=True, center=True)
+    fig = fig_corr.get_figure()
+    fig.savefig(f"{Constants.DATA_URL}/cat-analyst/data/img/snscorr{ID}.png")
+    
+    corr.to_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/corr{ID}.csv")
+    pval_df.to_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/p_val{ID}.csv")
+    
+    return corr
+
+def get_corr_spearman(data, ID):
+    corr = data.select_dtypes(np.number).corr(method = "spearman")
+    corr = corr.round(4)
+    
+    cols = data.select_dtypes(np.number).columns.array
+    pval_df = pd.DataFrame()
+    for col1 in cols:
+        for col2 in cols:
+            _, p_val = stats.spearmanr(data[col1], data[col2])
+            pval_df.loc[col1, col2] = p_val
+    pval_df = pval_df.round(4)
+    
+    fig_corr = sns.heatmap(corr, annot=True, center=True)
+    fig = fig_corr.get_figure()
+    fig.savefig(f"{Constants.DATA_URL}/cat-analyst/data/img/snscorr{ID}.png")
+    
+    corr.to_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/corr{ID}.csv")
+    pval_df.to_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/p_val{ID}.csv")
+    
+    return corr
+
+def get_corr_auto(data, ID):
     corr = data.select_dtypes(np.number).corr()
     corr = corr.round(4)
     
