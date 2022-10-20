@@ -3,6 +3,11 @@ from utilities import *
 import Constants 
 from telegram import InlineKeyboardMarkup
 import pandas as pd
+import os
+
+img_url = f"{Constants.DATA_URL}/cat-analyst/data/img"
+prepdata_url = f"{Constants.DATA_URL}/cat-analyst/data/prep_data"
+input_url = f"{Constants.DATA_URL}/cat-analyst/data/inputs"
 
 async def start(update, context): 
     await context.bot.send_message(
@@ -15,11 +20,13 @@ async def instraction(update, context):
         chat_id = update.effective_chat.id,
         text = "Для работы со мной тебе следует отправить файл формата .csv с твоими данными. ОЧЕНЬ ВАЖНО - убедись, что значения качественных признаков введены текстом, а не числом (Пол 1,0 должны быть мужчина, женщина, например). Сделаем нашу совместную работу проще!"
     )
+    
 async def help(update, context):
     await context.bot.send_message(
         chat_id=update.effective_chat.id, 
         text="Вот список команд, которые я знаю:\n/start - Приветственная команда с требованием к данным\n/instraction - инструкция по работе со мной\n"
         )
+    
 async def echo(update, context):
     text = update.message.text.lower()
     if "люблю" in text:
@@ -32,7 +39,7 @@ async def get_document(update, context):
     
     ID = str(update.effective_chat.id)
         
-    await (await context.bot.get_file(update.message.document)).download(f'{Constants.DATA_URL}/cat-analyst/data/inputs/D{ID}.csv')
+    await (await context.bot.get_file(update.message.document)).download(f'{input_url}/D{ID}.csv')
     
     data = read_data(ID)
     data_vars = get_data_variables(data, ID)
@@ -63,14 +70,14 @@ async def get_buttons_callbacks(update, context):
         await context.bot.send_message(chat_id = update.effective_chat.id, text = 'А ты не из робких!')
         
         ID = update.effective_chat.id
-        pd.read_csv(f"{Constants.DATA_URL}/cat-analyst/data/inputs/D{ID}.csv", index_col=0).to_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/D{ID}.csv")
+        pd.read_csv(f"{input_url}/D{ID}.csv", index_col=0).to_csv(f"{prepdata_url}/D{ID}.csv")
             
     elif 'Yes122121218821827178' in q_data: 
         await context.bot.send_message(chat_id = update.effective_chat.id, text = 'Понял, сейчас обработаю!')
         
         ID = str(update.effective_chat.id)
             
-        data = pd.read_csv(f"{Constants.DATA_URL}/cat-analyst/data/inputs/D{ID}.csv", index_col=0)
+        data = pd.read_csv(f"{input_url}/D{ID}.csv", index_col=0)
         data, na_drops, many_drops, r_before, r_after = auto_preproccecing(data, ID)
         
         await context.bot.send_message(chat_id = update.effective_chat.id, text = 'Данные обработаны. Теперь анализ пойдёт как по маслу!')
@@ -91,7 +98,13 @@ async def get_buttons_callbacks(update, context):
             chat_id = update.effective_chat.id,
             text = "Данные предобработаны, что будем делать дальше?",
             reply_markup = InlineKeyboardMarkup(buttons))
-    
+        
+    elif 'dow122121218821827178' in q_data:
+        await context.bot.send_message(
+            chat_id = update.effective_chat.id,
+            text = "Хорошо, надеюсь моя обработка поможет тебе получить качественные инсайты!")
+        await send_file(update, context, f"{prepdata_url}/D{update.effective_chat.id}.csv", "prep_data.csv")
+    #Correletion block
     elif 'corr122121218821827178' in q_data:
         buttons = create_buttons([('Авто', 'corrauto122121218821827178'),
                                   ('Пирсон (параметрический тест)', 'pirson122121218821827178'),
@@ -103,39 +116,27 @@ async def get_buttons_callbacks(update, context):
         
     elif 'corrauto122121218821827178' in q_data:
         ID = str(update.effective_chat.id)
-        data = pd.read_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/D{ID}.csv", index_col=0)
-        corr = get_corr_pearson(data, ID)
+        data = pd.read_csv(f"{prepdata_url}/D{ID}.csv", index_col=0)
         
-        with open(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/corr{ID}.csv", "rb") as file:
-            await context.bot.send_document(chat_id = update.effective_chat.id, document=file, filename="corrmatrix.csv")
-        with open(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/p_val{ID}.csv", "rb") as file:
-            await context.bot.send_document(chat_id = update.effective_chat.id, document=file, filename="p_values.csv")
-        with open(f"{Constants.DATA_URL}/cat-analyst/data/img/snscorr{ID}.png", "rb") as file:
-            await context.bot.send_photo(chat_id = update.effective_chat.id, photo=file, filename="corrmatrix2.png")  
+        get_corr_pearson(data, ID)
+        await send_corr_files(update, context, f"{prepdata_url}/corr{ID}.csv", f"{prepdata_url}/p_val{ID}.csv", f"{img_url}/snscorr{ID}.png")
+        await remove_corr_outputs(f"{prepdata_url}/corr{ID}.csv", f"{prepdata_url}/p_val{ID}.csv", f"{img_url}/snscorr{ID}.png") 
             
     elif 'sperman122121218821827178' in q_data:
         ID = str(update.effective_chat.id)
-        data = pd.read_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/D{ID}.csv", index_col=0)
-        corr = get_corr_spearman(data, ID)
+        data = pd.read_csv(f"{prepdata_url}/D{ID}.csv", index_col=0)
         
-        with open(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/corr{ID}.csv", "rb") as file:
-            await context.bot.send_document(chat_id = update.effective_chat.id, document=file, filename="corrmatrix.csv")
-        with open(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/p_val{ID}.csv", "rb") as file:
-            await context.bot.send_document(chat_id = update.effective_chat.id, document=file, filename="p_values.csv")
-        with open(f"{Constants.DATA_URL}/cat-analyst/data/img/snscorr{ID}.png", "rb") as file:
-            await context.bot.send_photo(chat_id = update.effective_chat.id, photo=file, filename="corrmatrix2.png") 
+        get_corr_spearman(data, ID)
+        await send_corr_files(update, context, f"{prepdata_url}/corr{ID}.csv", f"{prepdata_url}/p_val{ID}.csv", f"{img_url}/snscorr{ID}.png")
+        await remove_corr_outputs(f"{prepdata_url}/corr{ID}.csv", f"{prepdata_url}/p_val{ID}.csv", f"{img_url}/snscorr{ID}.png")
             
     elif 'pirson122121218821827178' in q_data:
         ID = str(update.effective_chat.id)
-        data = pd.read_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/D{ID}.csv", index_col=0)
-        corr = get_corr_pearson(data, ID)
+        data = pd.read_csv(f"{prepdata_url}/D{ID}.csv", index_col=0)
         
-        with open(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/corr{ID}.csv", "rb") as file:
-            await context.bot.send_document(chat_id = update.effective_chat.id, document=file, filename="corrmatrix.csv")
-        with open(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/p_val{ID}.csv", "rb") as file:
-            await context.bot.send_document(chat_id = update.effective_chat.id, document=file, filename="p_values.csv")
-        with open(f"{Constants.DATA_URL}/cat-analyst/data/img/snscorr{ID}.png", "rb") as file:
-            await context.bot.send_photo(chat_id = update.effective_chat.id, photo=file, filename="corrmatrix2.png") 
+        get_corr_pearson(data, ID)
+        await send_corr_files(update, context, f"{prepdata_url}/corr{ID}.csv", f"{prepdata_url}/p_val{ID}.csv", f"{img_url}/snscorr{ID}.png") 
+        await remove_corr_outputs(f"{prepdata_url}/corr{ID}.csv", f"{prepdata_url}/p_val{ID}.csv", f"{img_url}/snscorr{ID}.png")
     
         
         

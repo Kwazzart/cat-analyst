@@ -12,6 +12,7 @@ def read_data(ID):
     return data
 
 def get_data_variables(data, ID):
+    data = data.copy()
     n_samples, n_features = data.shape
     cat_features = list(data.select_dtypes("O").columns.array)
     n_cat_features = len(cat_features)
@@ -79,6 +80,7 @@ def auto_preproccecing(data, ID):
     return data, na_features_to_drop, many_unique_values_features_to_drop, rows_before, rows_after
 
 def get_corr_pearson(data, ID):
+    data = data.copy()
     corr = data.select_dtypes(np.number).corr()
     corr = corr.round(4)
     
@@ -90,16 +92,16 @@ def get_corr_pearson(data, ID):
             pval_df.loc[col1, col2] = p_val
     pval_df = pval_df.round(4)
     
+    plt.clf()
     fig_corr = sns.heatmap(corr, annot=True, center=True)
     fig = fig_corr.get_figure()
-    fig.savefig(f"{Constants.DATA_URL}/cat-analyst/data/img/snscorr{ID}.png")
     
+    fig.savefig(f"{Constants.DATA_URL}/cat-analyst/data/img/snscorr{ID}.png")
     corr.to_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/corr{ID}.csv")
     pval_df.to_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/p_val{ID}.csv")
-    
-    return corr
 
 def get_corr_spearman(data, ID):
+    data = data.copy()
     corr = data.select_dtypes(np.number).corr(method = "spearman")
     corr = corr.round(4)
     
@@ -111,16 +113,16 @@ def get_corr_spearman(data, ID):
             pval_df.loc[col1, col2] = p_val
     pval_df = pval_df.round(4)
     
+    plt.clf()
     fig_corr = sns.heatmap(corr, annot=True, center=True)
     fig = fig_corr.get_figure()
-    fig.savefig(f"{Constants.DATA_URL}/cat-analyst/data/img/snscorr{ID}.png")
     
+    fig.savefig(f"{Constants.DATA_URL}/cat-analyst/data/img/snscorr{ID}.png")
     corr.to_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/corr{ID}.csv")
     pval_df.to_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/p_val{ID}.csv")
-    
-    return corr
 
 def get_corr_auto(data, ID):
+    data = data.copy()
     corr = data.select_dtypes(np.number).corr()
     corr = corr.round(4)
     
@@ -132,14 +134,15 @@ def get_corr_auto(data, ID):
             pval_df.loc[col1, col2] = p_val
     pval_df = pval_df.round(4)
     
+    plt.clf()
     fig_corr = sns.heatmap(corr, annot=True, center=True)
     fig = fig_corr.get_figure()
-    fig.savefig(f"{Constants.DATA_URL}/cat-analyst/data/img/snscorr{ID}.png")
+    #plt.cla()
     
+    fig.savefig(f"{Constants.DATA_URL}/cat-analyst/data/img/snscorr{ID}.png")
     corr.to_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/corr{ID}.csv")
     pval_df.to_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/p_val{ID}.csv")
     
-    return corr
     
     
     
