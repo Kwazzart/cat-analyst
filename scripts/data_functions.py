@@ -33,8 +33,17 @@ def auto_preproccecing(data, ID):
     isna_df = data.isna().sum()/len(data)
     na_features_to_drop = isna_df[isna_df >= 0.7].index.values
     
-    cat_features = data.select_dtypes("O").columns.array
-    num_features = data.select_dtypes(np.number).columns.array
+    cat_features = []
+    num_features = []
+    binary_features = []
+    for feature in data.columns:
+        if data[feature].dtypes == "O" or data[feature].nunique() == 2:
+            data[feature] = data[feature].map(lambda x: str(x)+"cat")
+            cat_features.append(feature)
+            if data[feature].nunique() == 2:
+                binary_features.append(feature)
+        else:
+            num_features.append(feature)
     
     for feature in cat_features:
         data[feature] = data[feature].fillna(data[feature].mode()[0])
@@ -61,6 +70,7 @@ def auto_preproccecing(data, ID):
     
     skew_df.to_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/skew_df{ID}.csv")
     data.to_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/D{ID}.csv")
+    pd.DataFrame({"Bin_Features":binary_features}).set_index("Bin_Features").to_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/binf{ID}.csv")
     
     rows_before = data.shape[0]
     common_mode = []
@@ -77,7 +87,27 @@ def auto_preproccecing(data, ID):
         data = data.drop(data[data[feature] > (q3 + 2.25 * iqr)].index)
     rows_after = data.shape[0]
 
-    return data, na_features_to_drop, many_unique_values_features_to_drop, rows_before, rows_after
+    return data, na_features_to_drop, many_unique_values_features_to_drop, rows_before, rows_after, cat_features, num_features, binary_features
+
+def get_twov(data, ID, bf):
+    data = data.copy()
+    f1 = data[bf].unique()[0]
+    f2 = data[bf].unique()[1]
+    df1 = data[data[bf]==f1]
+    df2 = data[data[bf]==f2]
+    
+    num_features = data.select_dtypes(np.number).columns.values
+    
+    twov_df = pd.DataFrame({"Features":num_features}).set_index("Features")
+    
+    for col in num_features:
+        twov_df.loc[col, "Two-Sided p-value"] = list(stats.ttest_ind(df1[col], df2[col]))[1]
+        twov_df.loc[col, f"{f1} greater {f2} p-value"] = list(stats.ttest_ind(df1[col], df2[col], alternative="greater"))[1]
+        twov_df.loc[col, f"{f1} less {f2} p-value"] = list(stats.ttest_ind(df1[col], df2[col], alternative="less"))[1]
+    
+    twov_df = twov_df.round(4)
+        
+    twov_df.to_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/twov{ID}.csv")
 
 def get_corr_pearson(data, ID):
     data = data.copy()
@@ -137,7 +167,6 @@ def get_corr_auto(data, ID):
     plt.clf()
     fig_corr = sns.heatmap(corr, annot=True, center=True)
     fig = fig_corr.get_figure()
-    #plt.cla()
     
     fig.savefig(f"{Constants.DATA_URL}/cat-analyst/data/img/snscorr{ID}.png")
     corr.to_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/corr{ID}.csv")
