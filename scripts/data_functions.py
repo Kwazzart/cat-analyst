@@ -101,12 +101,73 @@ def get_twov(data, ID, bf):
     twov_df = pd.DataFrame({"Features":num_features}).set_index("Features")
     
     for col in num_features:
+        value, p_val = stats.ttest_ind(df1[col], df2[col])
+        twov_df.loc[col, "Two-Sided p-value"] = str(value) + "-" + str(p_val)
+        value, p_val = stats.ttest_ind(df1[col], df2[col], alternative="greater")
+        twov_df.loc[col, f"{f1} greater {f2} p-value"] = str(value) + "-" + str(p_val)
+        value, p_val = stats.ttest_ind(df1[col], df2[col], alternative="less")
+        twov_df.loc[col, f"{f1} less {f2} p-value"] = str(value) + "-" + str(p_val)
+    
+    twov_df = twov_df.round(4)
+    
+    ax = plt.subplot(111, frame_on=False)
+    ax.xaxis.set_visible(False)
+    ax.yaxis.set_visible(False)  
+    pd.plotting.table(ax, twov_df)  
+
+    plt.savefig(f"{C.DATA_URL}/cat-analyst/data/img/twov{ID}.png")    
+    twov_df.to_csv(f"{C.DATA_URL}/cat-analyst/data/prep_data/twov{ID}.csv")
+    
+def get_ttest(data, ID, bf):
+    data = data.copy()
+    f1 = data[bf].unique()[0]
+    f2 = data[bf].unique()[1]
+    df1 = data[data[bf]==f1]
+    df2 = data[data[bf]==f2]
+    
+    num_features = data.select_dtypes(np.number).columns.values
+    
+    twov_df = pd.DataFrame({"Features":num_features}).set_index("Features")
+    
+    for col in num_features:
         twov_df.loc[col, "Two-Sided p-value"] = list(stats.ttest_ind(df1[col], df2[col]))[1]
         twov_df.loc[col, f"{f1} greater {f2} p-value"] = list(stats.ttest_ind(df1[col], df2[col], alternative="greater"))[1]
         twov_df.loc[col, f"{f1} less {f2} p-value"] = list(stats.ttest_ind(df1[col], df2[col], alternative="less"))[1]
     
     twov_df = twov_df.round(4)
-        
+    
+    ax = plt.subplot(111, frame_on=False)
+    ax.xaxis.set_visible(False)
+    ax.yaxis.set_visible(False)  
+    pd.plotting.table(ax, twov_df)  
+    
+    plt.savefig(f"{C.DATA_URL}/cat-analyst/data/img/twov{ID}.png")     
+    twov_df.to_csv(f"{C.DATA_URL}/cat-analyst/data/prep_data/twov{ID}.csv")
+    
+def get_manna(data, ID, bf):
+    data = data.copy()
+    f1 = data[bf].unique()[0]
+    f2 = data[bf].unique()[1]
+    df1 = data[data[bf]==f1]
+    df2 = data[data[bf]==f2]
+    
+    num_features = data.select_dtypes(np.number).columns.values
+    
+    twov_df = pd.DataFrame({"Features":num_features}).set_index("Features")
+    
+    for col in num_features:
+        twov_df.loc[col, "Two-Sided p-value"] = list(stats.mannwhitneyu(df1[col], df2[col]))[1]
+        twov_df.loc[col, f"{f1} greater {f2} p-value"] = list(stats.mannwhitneyu(df1[col], df2[col], alternative="greater"))[1]
+        twov_df.loc[col, f"{f1} less {f2} p-value"] = list(stats.mannwhitneyu(df1[col], df2[col], alternative="less"))[1]
+    
+    twov_df = twov_df.round(4)
+    
+    ax = plt.subplot(111, frame_on=False)
+    ax.xaxis.set_visible(False)
+    ax.yaxis.set_visible(False)  
+    pd.plotting.table(ax, twov_df)  
+    
+    plt.savefig(f"{C.DATA_URL}/cat-analyst/data/img/twov{ID}.png")     
     twov_df.to_csv(f"{C.DATA_URL}/cat-analyst/data/prep_data/twov{ID}.csv")
 
 def get_corr_pearson(data, ID):

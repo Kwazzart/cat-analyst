@@ -15,6 +15,10 @@ async def remove_outputs(*urls):
 async def send_file(update, context, url, filename):
     with open(url, "rb") as file:
         await context.bot.send_document(chat_id = update.effective_chat.id, document=file, filename=filename)
+
+async def send_img(update, context, url, filename):
+    with open(url, "rb") as file:
+        await context.bot.send_photo(chat_id = update.effective_chat.id, photo=file, filename=filename)
         
 async def send_corr_files(update, context, url1, url2, url_img):
     await send_file(update, context, url1, "corrmatrix.csv")

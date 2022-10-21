@@ -135,6 +135,7 @@ async def get_buttons_callbacks(update, context):
             await context.bot.send_message(chat_id=update.effective_chat.id, text="У тебя нет бинарных признаков, так что провести анализ двух выборок не выйдет :(")
     
     elif 'twovauto122121218821827178' in q_data:
+        C.TWOV = "auto"
         data = pd.read_csv(f"{prepdata_url}/D{update.effective_chat.id}.csv", index_col=0)
         binary_features = get_binary_feature(data)
         binary_features = [(bf, f"{bf}122121218821827178") for bf in binary_features]
@@ -145,6 +146,7 @@ async def get_buttons_callbacks(update, context):
                 reply_markup = InlineKeyboardMarkup(buttons))
     
     elif 'twovt122121218821827178' in q_data:
+        C.TWOV = "t"
         data = pd.read_csv(f"{prepdata_url}/D{update.effective_chat.id}.csv", index_col=0)
         binary_features = get_binary_feature(data)
         binary_features = [(bf, f"{bf}122121218821827178") for bf in binary_features]
@@ -155,6 +157,7 @@ async def get_buttons_callbacks(update, context):
                 reply_markup = InlineKeyboardMarkup(buttons))
     
     elif 'twovman122121218821827178' in q_data:
+        C.TWOV = "m"
         data = pd.read_csv(f"{prepdata_url}/D{update.effective_chat.id}.csv", index_col=0)
         binary_features = get_binary_feature(data)
         binary_features = [(bf, f"{bf}122121218821827178") for bf in binary_features]
@@ -203,12 +206,32 @@ async def get_buttons_callbacks(update, context):
         
     else:    
         for bf in BF:
-            if f"{bf}122121218821827178" in q_data:
-                ID = update.effective_chat.id 
-                data = pd.read_csv(f"{prepdata_url}/D{ID}.csv", index_col=0)
-                get_twov(data, ID, bf)
-                await send_file(update, context, f"{prepdata_url}/twov{ID}.csv", "t-test_data.csv")
-                await remove_outputs(f"{prepdata_url}/twov{ID}.csv")
+            if C.TWOV == "auto":
+                if f"{bf}122121218821827178" in q_data:
+                    ID = update.effective_chat.id 
+                    data = pd.read_csv(f"{prepdata_url}/D{ID}.csv", index_col=0)
+                    get_twov(data, ID, bf)
+                    await send_file(update, context, f"{prepdata_url}/twov{ID}.csv", "t-test_data.csv")
+                    await send_file(update, context, f"{img_url}/twov{ID}.png", "t-test_data.png")
+                    await remove_outputs(f"{prepdata_url}/twov{ID}.csv", f"{img_url}/twov{ID}.png")
+            
+            elif C.TWOV == "t":
+                if f"{bf}122121218821827178" in q_data:
+                    ID = update.effective_chat.id 
+                    data = pd.read_csv(f"{prepdata_url}/D{ID}.csv", index_col=0)
+                    get_ttest(data, ID, bf)
+                    await send_file(update, context, f"{prepdata_url}/twov{ID}.csv", "t-test_data.csv")
+                    await send_file(update, context, f"{img_url}/twov{ID}.png", "t-test_data.png")
+                    await remove_outputs(f"{prepdata_url}/twov{ID}.csv", f"{img_url}/twov{ID}.png")
+            
+            elif C.TWOV == "m":
+                if f"{bf}122121218821827178" in q_data:
+                    ID = update.effective_chat.id 
+                    data = pd.read_csv(f"{prepdata_url}/D{ID}.csv", index_col=0)
+                    get_manna(data, ID, bf)
+                    await send_file(update, context, f"{prepdata_url}/twov{ID}.csv", "t-test_data.csv")
+                    await send_file(update, context, f"{img_url}/twov{ID}.png", "t-test_data.png")
+                    await remove_outputs(f"{prepdata_url}/twov{ID}.csv", f"{img_url}/twov{ID}.png")
 
    
         
