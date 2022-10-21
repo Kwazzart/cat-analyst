@@ -2,13 +2,13 @@ import pandas as pd
 import matplotlib.pyplot as plt 
 import seaborn as sns
 import numpy as np
-import Constants
+import Constants as C
 import scipy.stats as stats
 
 pd.set_option('display.float_format', lambda x: '%.3f' % x)
 
 def read_data(ID):
-    data = pd.read_csv(f"{Constants.DATA_URL}/cat-analyst/data/inputs/D{ID}.csv", index_col=0)
+    data = pd.read_csv(f"{C.DATA_URL}/cat-analyst/data/inputs/D{ID}.csv", index_col=0)
     return data
 
 def get_data_variables(data, ID):
@@ -24,7 +24,7 @@ def get_data_variables(data, ID):
             "cat_features":" ".join(cat_features), "n_cat_features":n_cat_features,
             "num_features":" ".join(num_features), "n_num_features":n_num_features, "n_nan":n_nan}
     
-    #with open(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/data_vars{ID}.txt", "r") as file:
+    #with open(f"{C.DATA_URL}/cat-analyst/data/prep_data/data_vars{ID}.txt", "r") as file:
     #    file.write(var_dict)
     return var_dict
 
@@ -68,9 +68,9 @@ def auto_preproccecing(data, ID):
     
     
     
-    skew_df.to_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/skew_df{ID}.csv")
-    data.to_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/D{ID}.csv")
-    pd.DataFrame({"Bin_Features":binary_features}).set_index("Bin_Features").to_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/binf{ID}.csv")
+    skew_df.to_csv(f"{C.DATA_URL}/cat-analyst/data/prep_data/skew_df{ID}.csv")
+    data.to_csv(f"{C.DATA_URL}/cat-analyst/data/prep_data/D{ID}.csv")
+    pd.DataFrame({"Bin_Features":binary_features}).set_index("Bin_Features").to_csv(f"{C.DATA_URL}/cat-analyst/data/prep_data/binf{ID}.csv")
     
     rows_before = data.shape[0]
     common_mode = []
@@ -107,7 +107,7 @@ def get_twov(data, ID, bf):
     
     twov_df = twov_df.round(4)
         
-    twov_df.to_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/twov{ID}.csv")
+    twov_df.to_csv(f"{C.DATA_URL}/cat-analyst/data/prep_data/twov{ID}.csv")
 
 def get_corr_pearson(data, ID):
     data = data.copy()
@@ -126,9 +126,9 @@ def get_corr_pearson(data, ID):
     fig_corr = sns.heatmap(corr, annot=True, center=True)
     fig = fig_corr.get_figure()
     
-    fig.savefig(f"{Constants.DATA_URL}/cat-analyst/data/img/snscorr{ID}.png")
-    corr.to_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/corr{ID}.csv")
-    pval_df.to_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/p_val{ID}.csv")
+    fig.savefig(f"{C.DATA_URL}/cat-analyst/data/img/snscorr{ID}.png")
+    corr.to_csv(f"{C.DATA_URL}/cat-analyst/data/prep_data/corr{ID}.csv")
+    pval_df.to_csv(f"{C.DATA_URL}/cat-analyst/data/prep_data/p_val{ID}.csv")
 
 def get_corr_spearman(data, ID):
     data = data.copy()
@@ -147,9 +147,9 @@ def get_corr_spearman(data, ID):
     fig_corr = sns.heatmap(corr, annot=True, center=True)
     fig = fig_corr.get_figure()
     
-    fig.savefig(f"{Constants.DATA_URL}/cat-analyst/data/img/snscorr{ID}.png")
-    corr.to_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/corr{ID}.csv")
-    pval_df.to_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/p_val{ID}.csv")
+    fig.savefig(f"{C.DATA_URL}/cat-analyst/data/img/snscorr{ID}.png")
+    corr.to_csv(f"{C.DATA_URL}/cat-analyst/data/prep_data/corr{ID}.csv")
+    pval_df.to_csv(f"{C.DATA_URL}/cat-analyst/data/prep_data/p_val{ID}.csv")
 
 def get_corr_auto(data, ID):
     data = data.copy()
@@ -168,9 +168,9 @@ def get_corr_auto(data, ID):
     fig_corr = sns.heatmap(corr, annot=True, center=True)
     fig = fig_corr.get_figure()
     
-    fig.savefig(f"{Constants.DATA_URL}/cat-analyst/data/img/snscorr{ID}.png")
-    corr.to_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/corr{ID}.csv")
-    pval_df.to_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/p_val{ID}.csv")
+    fig.savefig(f"{C.DATA_URL}/cat-analyst/data/img/snscorr{ID}.png")
+    corr.to_csv(f"{C.DATA_URL}/cat-analyst/data/prep_data/corr{ID}.csv")
+    pval_df.to_csv(f"{C.DATA_URL}/cat-analyst/data/prep_data/p_val{ID}.csv")
     
     
     

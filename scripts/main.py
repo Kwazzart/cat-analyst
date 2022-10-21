@@ -1,6 +1,6 @@
 #imports
 #from asyncore import dispatcher // непонятный импот
-import Constants
+import Constants as C
 import Requests as R
 import logging
 
@@ -16,7 +16,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 
 if __name__ == "__main__":
     
-    application = ApplicationBuilder().token(Constants.TOKEN).read_timeout(30).write_timeout(30).build()
+    application = ApplicationBuilder().token(C.TOKEN).read_timeout(30).write_timeout(30).build()
     
     application.add_handler(CommandHandler('start', R.start))
     application.add_handler(CommandHandler('help', R.help))

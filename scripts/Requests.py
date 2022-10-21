@@ -1,13 +1,13 @@
 from data_functions import *
 from utilities import *
-import Constants 
+import Constants as C 
 from telegram import InlineKeyboardMarkup
 import pandas as pd
 import os
 
-img_url = f"{Constants.DATA_URL}/cat-analyst/data/img"
-prepdata_url = f"{Constants.DATA_URL}/cat-analyst/data/prep_data"
-input_url = f"{Constants.DATA_URL}/cat-analyst/data/inputs"
+img_url = f"{C.DATA_URL}/cat-analyst/data/img"
+prepdata_url = f"{C.DATA_URL}/cat-analyst/data/prep_data"
+input_url = f"{C.DATA_URL}/cat-analyst/data/inputs"
 button_text = 122121218821827178
 
 BF = None
@@ -117,7 +117,6 @@ async def get_buttons_callbacks(update, context):
         await context.bot.send_message(chat_id=update.effective_chat.id, text="Для того, чтобы провести анализ двух выборок нужен как минимум один бинарный (два уникальных значения) качественный признак!")
         data = pd.read_csv(f"{prepdata_url}/D{update.effective_chat.id}.csv", index_col=0)
         binary_features = get_binary_feature(data)
-        print(binary_features)
         if binary_features:
             buttons = create_buttons(('Авто', 'twovauto122121218821827178'),
                                     ('t-test', 'twovt122121218821827178'),
