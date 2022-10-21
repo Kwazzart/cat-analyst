@@ -64,6 +64,12 @@ async def get_buttons_callbacks(update, context):
         
         ID = update.effective_chat.id
         pd.read_csv(f"{Constants.DATA_URL}/cat-analyst/data/inputs/D{ID}.csv", index_col=0).to_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/D{ID}.csv")
+
+        buttons = create_buttons([('Описательная статистика (графики)', 'desc122121218821827178')])
+        await context.bot.send_message(
+            chat_id = update.effective_chat.id,
+            text = "Окей, что будем делать дальше?",
+            reply_markup = InlineKeyboardMarkup(buttons))
             
     elif 'Yes122121218821827178' in q_data: 
         await context.bot.send_message(chat_id = update.effective_chat.id, text = 'Понял, сейчас обработаю!')
@@ -136,6 +142,12 @@ async def get_buttons_callbacks(update, context):
             await context.bot.send_document(chat_id = update.effective_chat.id, document=file, filename="p_values.csv")
         with open(f"{Constants.DATA_URL}/cat-analyst/data/img/snscorr{ID}.png", "rb") as file:
             await context.bot.send_photo(chat_id = update.effective_chat.id, photo=file, filename="corrmatrix2.png") 
+
+    elif 'desc122121218821827178' in q_data:
+        ID = str(update.effective_chat.id)
+        data = pd.read_csv(f"{Constants.DATA_URL}/cat-analyst/data/inputs/D{ID}.csv", index_col=0)
+        
+
     
         
         

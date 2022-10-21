@@ -140,6 +140,10 @@ def get_corr_auto(data, ID):
     pval_df.to_csv(f"{Constants.DATA_URL}/cat-analyst/data/prep_data/p_val{ID}.csv")
     
     return corr
+
+#def descriptive(data, ID): 
+#   data = data.copy
+
     
     
     
