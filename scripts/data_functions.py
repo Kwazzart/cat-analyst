@@ -172,6 +172,10 @@ def get_corr_auto(data, ID):
     corr.to_csv(f"{C.DATA_URL}/cat-analyst/data/prep_data/corr{ID}.csv")
     pval_df.to_csv(f"{C.DATA_URL}/cat-analyst/data/prep_data/p_val{ID}.csv")
     
+
+#def descriptive(data, ID): 
+#   data = data.copy
+
     
     
     

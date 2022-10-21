@@ -74,6 +74,12 @@ async def get_buttons_callbacks(update, context):
         
         ID = update.effective_chat.id
         pd.read_csv(f"{input_url}/D{ID}.csv", index_col=0).to_csv(f"{prepdata_url}/D{ID}.csv")
+
+        buttons = create_buttons([('Описательная статистика (графики)', 'desc122121218821827178')])
+        await context.bot.send_message(
+            chat_id = update.effective_chat.id,
+            text = "Окей, что будем делать дальше?",
+            reply_markup = InlineKeyboardMarkup(buttons))
             
     elif 'Yes122121218821827178' in q_data: 
         await context.bot.send_message(chat_id = update.effective_chat.id, text = 'Понял, сейчас обработаю!')
@@ -104,6 +110,7 @@ async def get_buttons_callbacks(update, context):
             chat_id = update.effective_chat.id,
             text = "Данные предобработаны, что будем делать дальше?",
             reply_markup = InlineKeyboardMarkup(buttons))
+<<<<<<< HEAD
         
     elif 'dow122121218821827178' in q_data:
         await context.bot.send_message(
@@ -127,38 +134,9 @@ async def get_buttons_callbacks(update, context):
                 reply_markup = InlineKeyboardMarkup(buttons))
         else:
             await context.bot.send_message(chat_id=update.effective_chat.id, text="У тебя нет бинарных признаков, так что провести анализ двух выборок не выйдет :(")
+=======
+>>>>>>> b30e220e91aeb4d4ae19514f0a7c2735ce9b427e
     
-    elif 'twovauto122121218821827178' in q_data:
-        data = pd.read_csv(f"{prepdata_url}/D{update.effective_chat.id}.csv", index_col=0)
-        binary_features = get_binary_feature(data)
-        binary_features = [(bf, f"{bf}122121218821827178") for bf in binary_features]
-        buttons = create_buttons(*binary_features)
-        await context.bot.send_message(
-                chat_id = update.effective_chat.id,
-                text = "Выбери качественную бинарную фичу для сравнения!",
-                reply_markup = InlineKeyboardMarkup(buttons))
-    
-    elif 'twovt122121218821827178' in q_data:
-        data = pd.read_csv(f"{prepdata_url}/D{update.effective_chat.id}.csv", index_col=0)
-        binary_features = get_binary_feature(data)
-        binary_features = [(bf, f"{bf}122121218821827178") for bf in binary_features]
-        buttons = create_buttons(*binary_features)
-        await context.bot.send_message(
-                chat_id = update.effective_chat.id,
-                text = "Выбери качественную бинарную фичу для сравнения.",
-                reply_markup = InlineKeyboardMarkup(buttons))
-    
-    elif 'twovman122121218821827178' in q_data:
-        data = pd.read_csv(f"{prepdata_url}/D{update.effective_chat.id}.csv", index_col=0)
-        binary_features = get_binary_feature(data)
-        binary_features = [(bf, f"{bf}122121218821827178") for bf in binary_features]
-        buttons = create_buttons(*binary_features)
-        await context.bot.send_message(
-                chat_id = update.effective_chat.id,
-                text = "Выбери качественную бинарную фичу для сравнения!",
-                reply_markup = InlineKeyboardMarkup(buttons))
-           
-    #Correletion block
     elif 'corr122121218821827178' in q_data:
         buttons = create_buttons(('Авто', 'corrauto122121218821827178'),
                                   ('Пирсон (параметрический тест)', 'pirson122121218821827178'),
@@ -192,6 +170,10 @@ async def get_buttons_callbacks(update, context):
         await send_corr_files(update, context, f"{prepdata_url}/corr{ID}.csv", f"{prepdata_url}/p_val{ID}.csv", f"{img_url}/snscorr{ID}.png") 
         await remove_corr_outputs(f"{prepdata_url}/corr{ID}.csv", f"{prepdata_url}/p_val{ID}.csv", f"{img_url}/snscorr{ID}.png")
     
+    elif 'desc122121218821827178' in q_data:
+        ID = str(update.effective_chat.id)
+        data = pd.read_csv(f"{Constants.DATA_URL}/cat-analyst/data/inputs/D{ID}.csv", index_col=0)
+        
     else:    
         for bf in BF:
             if f"{bf}122121218821827178" in q_data:
@@ -201,6 +183,10 @@ async def get_buttons_callbacks(update, context):
                 get_twov(data, ID, bf)
                 await send_file(update, context, f"{prepdata_url}/twov{ID}.csv", "t-test_data.csv")
                 await remove_corr_outputs(f"{prepdata_url}/twov{ID}.csv")
+
+   
+        
+
     
         
         
