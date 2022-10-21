@@ -110,7 +110,6 @@ async def get_buttons_callbacks(update, context):
             chat_id = update.effective_chat.id,
             text = "Данные предобработаны, что будем делать дальше?",
             reply_markup = InlineKeyboardMarkup(buttons))
-<<<<<<< HEAD
         
     elif 'dow122121218821827178' in q_data:
         await context.bot.send_message(
@@ -134,8 +133,6 @@ async def get_buttons_callbacks(update, context):
                 reply_markup = InlineKeyboardMarkup(buttons))
         else:
             await context.bot.send_message(chat_id=update.effective_chat.id, text="У тебя нет бинарных признаков, так что провести анализ двух выборок не выйдет :(")
-=======
->>>>>>> b30e220e91aeb4d4ae19514f0a7c2735ce9b427e
     
     elif 'corr122121218821827178' in q_data:
         buttons = create_buttons(('Авто', 'corrauto122121218821827178'),
@@ -172,7 +169,7 @@ async def get_buttons_callbacks(update, context):
     
     elif 'desc122121218821827178' in q_data:
         ID = str(update.effective_chat.id)
-        data = pd.read_csv(f"{Constants.DATA_URL}/cat-analyst/data/inputs/D{ID}.csv", index_col=0)
+        data = pd.read_csv(f"{C.DATA_URL}/cat-analyst/data/inputs/D{ID}.csv", index_col=0)
         
     else:    
         for bf in BF:
