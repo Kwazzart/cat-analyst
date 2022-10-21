@@ -102,11 +102,16 @@ def get_twov(data, ID, bf):
     
     for col in num_features:
         value, p_val = stats.ttest_ind(df1[col], df2[col])
-        twov_df.loc[col, "Two-Sided p-value"] = str(value) + "-" + str(p_val)
+        value, p_val = np.round(value, 4), np.round(p_val, 4)
+        twov_df.loc[col, "Two-Sided p-value"] = "test_value: " + str(value) + "-" + "p_val: " + str(p_val)
+        
         value, p_val = stats.ttest_ind(df1[col], df2[col], alternative="greater")
-        twov_df.loc[col, f"{f1} greater {f2} p-value"] = str(value) + "-" + str(p_val)
+        value, p_val = np.round(value, 4), np.round(p_val, 4)
+        twov_df.loc[col, f"{f1} greater {f2} p-value"] = "test_value: " + str(value) + "-" + "p_val: " + str(p_val)
+        
         value, p_val = stats.ttest_ind(df1[col], df2[col], alternative="less")
-        twov_df.loc[col, f"{f1} less {f2} p-value"] = str(value) + "-" + str(p_val)
+        value, p_val = np.round(value, 4), np.round(p_val, 4)
+        twov_df.loc[col, f"{f1} less {f2} p-value"] = "test_value: " + str(value) + "-" + "p_val: " + str(p_val)
     
     twov_df = twov_df.round(4)
     
@@ -130,9 +135,17 @@ def get_ttest(data, ID, bf):
     twov_df = pd.DataFrame({"Features":num_features}).set_index("Features")
     
     for col in num_features:
-        twov_df.loc[col, "Two-Sided p-value"] = list(stats.ttest_ind(df1[col], df2[col]))[1]
-        twov_df.loc[col, f"{f1} greater {f2} p-value"] = list(stats.ttest_ind(df1[col], df2[col], alternative="greater"))[1]
-        twov_df.loc[col, f"{f1} less {f2} p-value"] = list(stats.ttest_ind(df1[col], df2[col], alternative="less"))[1]
+        value, p_val = stats.ttest_ind(df1[col], df2[col])
+        value, p_val = np.round(value, 4), np.round(p_val, 4)
+        twov_df.loc[col, "Two-Sided p-value"] = "test_value: " + str(value) + "-" + "p_val: " + str(p_val)
+        
+        value, p_val = stats.ttest_ind(df1[col], df2[col], alternative="greater")
+        value, p_val = np.round(value, 4), np.round(p_val, 4)
+        twov_df.loc[col, f"{f1} greater {f2} p-value"] = "test_value: " + str(value) + "-" + "p_val: " + str(p_val)
+        
+        value, p_val = stats.ttest_ind(df1[col], df2[col], alternative="less")
+        value, p_val = np.round(value, 4), np.round(p_val, 4)
+        twov_df.loc[col, f"{f1} less {f2} p-value"] = "test_value: " + str(value) + "-" + "p_val: " + str(p_val)
     
     twov_df = twov_df.round(4)
     
@@ -156,9 +169,17 @@ def get_manna(data, ID, bf):
     twov_df = pd.DataFrame({"Features":num_features}).set_index("Features")
     
     for col in num_features:
-        twov_df.loc[col, "Two-Sided p-value"] = list(stats.mannwhitneyu(df1[col], df2[col]))[1]
-        twov_df.loc[col, f"{f1} greater {f2} p-value"] = list(stats.mannwhitneyu(df1[col], df2[col], alternative="greater"))[1]
-        twov_df.loc[col, f"{f1} less {f2} p-value"] = list(stats.mannwhitneyu(df1[col], df2[col], alternative="less"))[1]
+        value, p_val = stats.ttest_ind(df1[col], df2[col])
+        value, p_val = np.round(value, 4), np.round(p_val, 4)
+        twov_df.loc[col, "Two-Sided p-value"] = "test_value: " + str(value) + "-" + "p_val: " + str(p_val)
+        
+        value, p_val = stats.ttest_ind(df1[col], df2[col], alternative="greater")
+        value, p_val = np.round(value, 4), np.round(p_val, 4)
+        twov_df.loc[col, f"{f1} greater {f2} p-value"] = "test_value: " + str(value) + "-" + "p_val: " + str(p_val)
+        
+        value, p_val = stats.ttest_ind(df1[col], df2[col], alternative="less")
+        value, p_val = np.round(value, 4), np.round(p_val, 4)
+        twov_df.loc[col, f"{f1} less {f2} p-value"] = "test_value: " + str(value) + "-" + "p_val: " + str(p_val)
     
     twov_df = twov_df.round(4)
     
