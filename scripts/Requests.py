@@ -118,7 +118,7 @@ async def get_buttons_callbacks(update, context):
         await send_file(update, context, f"{prepdata_url}/D{update.effective_chat.id}.csv", "prep_data.csv")
         await send_file(update, context, f"{prepdata_url}/skew_df{update.effective_chat.id}.csv", "skew_data.csv")
         
-    #tho-sets block     
+    #two-sets block     
     elif 'two122121218821827178' in q_data:
         await context.bot.send_message(chat_id=update.effective_chat.id, text="Для того, чтобы провести анализ двух выборок нужен как минимум один бинарный (два уникальных значения) качественный признак!")
         data = pd.read_csv(f"{prepdata_url}/D{update.effective_chat.id}.csv", index_col=0)
@@ -133,6 +133,36 @@ async def get_buttons_callbacks(update, context):
                 reply_markup = InlineKeyboardMarkup(buttons))
         else:
             await context.bot.send_message(chat_id=update.effective_chat.id, text="У тебя нет бинарных признаков, так что провести анализ двух выборок не выйдет :(")
+    
+    elif 'twovauto122121218821827178' in q_data:
+        data = pd.read_csv(f"{prepdata_url}/D{update.effective_chat.id}.csv", index_col=0)
+        binary_features = get_binary_feature(data)
+        binary_features = [(bf, f"{bf}122121218821827178") for bf in binary_features]
+        buttons = create_buttons(*binary_features)
+        await context.bot.send_message(
+                chat_id = update.effective_chat.id,
+                text = "Выбери качественную бинарную фичу для сравнения!",
+                reply_markup = InlineKeyboardMarkup(buttons))
+    
+    elif 'twovt122121218821827178' in q_data:
+        data = pd.read_csv(f"{prepdata_url}/D{update.effective_chat.id}.csv", index_col=0)
+        binary_features = get_binary_feature(data)
+        binary_features = [(bf, f"{bf}122121218821827178") for bf in binary_features]
+        buttons = create_buttons(*binary_features)
+        await context.bot.send_message(
+                chat_id = update.effective_chat.id,
+                text = "Выбери качественную бинарную фичу для сравнения.",
+                reply_markup = InlineKeyboardMarkup(buttons))
+    
+    elif 'twovman122121218821827178' in q_data:
+        data = pd.read_csv(f"{prepdata_url}/D{update.effective_chat.id}.csv", index_col=0)
+        binary_features = get_binary_feature(data)
+        binary_features = [(bf, f"{bf}122121218821827178") for bf in binary_features]
+        buttons = create_buttons(*binary_features)
+        await context.bot.send_message(
+                chat_id = update.effective_chat.id,
+                text = "Выбери качественную бинарную фичу для сравнения!",
+                reply_markup = InlineKeyboardMarkup(buttons))
     
     elif 'corr122121218821827178' in q_data:
         buttons = create_buttons(('Авто', 'corrauto122121218821827178'),
@@ -149,7 +179,7 @@ async def get_buttons_callbacks(update, context):
         
         get_corr_pearson(data, ID)
         await send_corr_files(update, context, f"{prepdata_url}/corr{ID}.csv", f"{prepdata_url}/p_val{ID}.csv", f"{img_url}/snscorr{ID}.png")
-        await remove_corr_outputs(f"{prepdata_url}/corr{ID}.csv", f"{prepdata_url}/p_val{ID}.csv", f"{img_url}/snscorr{ID}.png") 
+        await remove_outputs(f"{prepdata_url}/corr{ID}.csv", f"{prepdata_url}/p_val{ID}.csv", f"{img_url}/snscorr{ID}.png") 
             
     elif 'sperman122121218821827178' in q_data:
         ID = str(update.effective_chat.id)
@@ -157,7 +187,7 @@ async def get_buttons_callbacks(update, context):
         
         get_corr_spearman(data, ID)
         await send_corr_files(update, context, f"{prepdata_url}/corr{ID}.csv", f"{prepdata_url}/p_val{ID}.csv", f"{img_url}/snscorr{ID}.png")
-        await remove_corr_outputs(f"{prepdata_url}/corr{ID}.csv", f"{prepdata_url}/p_val{ID}.csv", f"{img_url}/snscorr{ID}.png")
+        await remove_outputs(f"{prepdata_url}/corr{ID}.csv", f"{prepdata_url}/p_val{ID}.csv", f"{img_url}/snscorr{ID}.png")
             
     elif 'pirson122121218821827178' in q_data:
         ID = str(update.effective_chat.id)
@@ -165,7 +195,7 @@ async def get_buttons_callbacks(update, context):
         
         get_corr_pearson(data, ID)
         await send_corr_files(update, context, f"{prepdata_url}/corr{ID}.csv", f"{prepdata_url}/p_val{ID}.csv", f"{img_url}/snscorr{ID}.png") 
-        await remove_corr_outputs(f"{prepdata_url}/corr{ID}.csv", f"{prepdata_url}/p_val{ID}.csv", f"{img_url}/snscorr{ID}.png")
+        await remove_outputs(f"{prepdata_url}/corr{ID}.csv", f"{prepdata_url}/p_val{ID}.csv", f"{img_url}/snscorr{ID}.png")
     
     elif 'desc122121218821827178' in q_data:
         ID = str(update.effective_chat.id)
@@ -176,10 +206,9 @@ async def get_buttons_callbacks(update, context):
             if f"{bf}122121218821827178" in q_data:
                 ID = update.effective_chat.id 
                 data = pd.read_csv(f"{prepdata_url}/D{ID}.csv", index_col=0)
-                
                 get_twov(data, ID, bf)
                 await send_file(update, context, f"{prepdata_url}/twov{ID}.csv", "t-test_data.csv")
-                await remove_corr_outputs(f"{prepdata_url}/twov{ID}.csv")
+                await remove_outputs(f"{prepdata_url}/twov{ID}.csv")
 
    
         

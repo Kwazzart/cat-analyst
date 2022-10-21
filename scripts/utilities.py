@@ -8,7 +8,7 @@ def create_buttons(*args):
         buttons.append([InlineKeyboardButton(text, callback_data = cd)])
     return buttons
 
-async def remove_corr_outputs(*urls):
+async def remove_outputs(*urls):
     for url in urls:
         os.remove(url)
 
