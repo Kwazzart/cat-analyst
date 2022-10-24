@@ -4,11 +4,12 @@ import seaborn as sns
 import numpy as np
 import Constants as C
 import scipy.stats as stats
+import df2img
 
 pd.set_option('display.float_format', lambda x: '%.3f' % x)
 
 def read_data(ID):
-    data = pd.read_csv(f"{C.DATA_URL}/cat-analyst/data/inputs/D{ID}.csv", index_col=0)
+    data = pd.read_csv(f"{C.DATA_URL}/cat-analyst/data/inputs/D{ID}.csv", index_col=False)
     return data
 
 def get_data_variables(data, ID):
@@ -21,8 +22,8 @@ def get_data_variables(data, ID):
     n_nan = data.isna().sum().sum()
     
     var_dict = {"n_samples":n_samples, "n_features":n_features,
-            "cat_features":" ".join(cat_features), "n_cat_features":n_cat_features,
-            "num_features":" ".join(num_features), "n_num_features":n_num_features, "n_nan":n_nan}
+            "cat_features":", ".join(cat_features), "n_cat_features":n_cat_features,
+            "num_features":", ".join(num_features), "n_num_features":n_num_features, "n_nan":n_nan}
     
     #with open(f"{C.DATA_URL}/cat-analyst/data/prep_data/data_vars{ID}.txt", "r") as file:
     #    file.write(var_dict)
@@ -38,7 +39,7 @@ def auto_preproccecing(data, ID):
     binary_features = []
     for feature in data.columns:
         if data[feature].dtypes == "O" or data[feature].nunique() == 2:
-            data[feature] = data[feature].map(lambda x: str(x)+"cat")
+            data[feature] = data[feature].map(lambda x: str(x)+"(categorical)")
             cat_features.append(feature)
             if data[feature].nunique() == 2:
                 binary_features.append(feature)
@@ -65,14 +66,10 @@ def auto_preproccecing(data, ID):
         if data[feature].min() >= 0:
             data[feature] = np.log1p(data[feature])
     skew_df["skew_new"] = stats.skew(data.select_dtypes(np.number))
-    
-    
-    
-    skew_df.to_csv(f"{C.DATA_URL}/cat-analyst/data/prep_data/skew_df{ID}.csv")
-    data.to_csv(f"{C.DATA_URL}/cat-analyst/data/prep_data/D{ID}.csv")
-    pd.DataFrame({"Bin_Features":binary_features}).set_index("Bin_Features").to_csv(f"{C.DATA_URL}/cat-analyst/data/prep_data/binf{ID}.csv")
-    
     rows_before = data.shape[0]
+    rows_after = data.shape[0]
+
+    """ rows_before = data.shape[0]
     common_mode = []
     for feature in data.select_dtypes(np.number).columns.values:
         moda = data[feature].mode()
@@ -83,9 +80,13 @@ def auto_preproccecing(data, ID):
         q1 = data[feature].quantile(q=0.25)
         q3 = data[feature].quantile(q=0.75)
         iqr = q3-q1
-        data = data.drop(data[data[feature] < (q1 - 2.25 * iqr)].index)
-        data = data.drop(data[data[feature] > (q3 + 2.25 * iqr)].index)
-    rows_after = data.shape[0]
+        data = data.drop(data[data[feature] < (q1 - 2.5 * iqr)].index)
+        data = data.drop(data[data[feature] > (q3 + 2.5 * iqr)].index)
+    rows_after = data.shape[0] """
+
+    skew_df.to_csv(f"{C.DATA_URL}/cat-analyst/data/prep_data/skew_df{ID}.csv")
+    data.to_csv(f"{C.DATA_URL}/cat-analyst/data/prep_data/D{ID}.csv")
+    pd.DataFrame({"Bin_Features":binary_features}).set_index("Bin_Features").to_csv(f"{C.DATA_URL}/cat-analyst/data/prep_data/binf{ID}.csv")
 
     return data, na_features_to_drop, many_unique_values_features_to_drop, rows_before, rows_after, cat_features, num_features, binary_features
 
@@ -115,12 +116,30 @@ def get_twov(data, ID, bf):
     
     twov_df = twov_df.round(4)
     
-    ax = plt.subplot(111, frame_on=False)
-    ax.xaxis.set_visible(False)
-    ax.yaxis.set_visible(False)  
-    pd.plotting.table(ax, twov_df)  
-
-    plt.savefig(f"{C.DATA_URL}/cat-analyst/data/img/twov{ID}.png")    
+    plt.clf()
+    fig_two = df2img.plot_dataframe(
+    twov_df,
+    title=dict(
+            font_color="black",
+            font_family="Times New Roman",
+            font_size=16,
+            text=f"Тест на две выборки по признаку {bf}",
+        ),
+        tbl_header=dict(
+            align="right",
+            fill_color="pink",
+            font_color="black",
+            font_size=10,
+            line_color="black",
+        ),
+        tbl_cells=dict(
+            align="right",
+            line_color="black",
+        ),
+        row_fill_color=("#ffffff", "#ffffff"),
+        fig_size=(500, 70* len(num_features),
+    ))
+    fig_two.write_image(file=f"{C.DATA_URL}/cat-analyst/data/img/twov{ID}.png", format='png')   
     twov_df.to_csv(f"{C.DATA_URL}/cat-analyst/data/prep_data/twov{ID}.csv")
     
 def get_ttest(data, ID, bf):
@@ -148,13 +167,32 @@ def get_ttest(data, ID, bf):
         twov_df.loc[col, f"{f1} less {f2} p-value"] = "test_value: " + str(value) + "-" + "p_val: " + str(p_val)
     
     twov_df = twov_df.round(4)
-    
-    ax = plt.subplot(111, frame_on=False)
-    ax.xaxis.set_visible(False)
-    ax.yaxis.set_visible(False)  
-    pd.plotting.table(ax, twov_df)  
-    
-    plt.savefig(f"{C.DATA_URL}/cat-analyst/data/img/twov{ID}.png")     
+    #
+    plt.clf()
+    fig_two = df2img.plot_dataframe(
+    twov_df,
+    title=dict(
+            font_color="black",
+            font_family="Times New Roman",
+            font_size=16,
+            text=f"t-test по признаку {bf}",
+        ),
+        tbl_header=dict(
+            align="right",
+            fill_color="pink",
+            font_color="black",
+            font_size=10,
+            line_color="black",
+        ),
+        tbl_cells=dict(
+            align="right",
+            line_color="black",
+        ),
+        row_fill_color=("#ffffff", "#ffffff"),
+        fig_size=(500, 70* len(num_features),
+    ))
+    fig_two.write_image(file=f"{C.DATA_URL}/cat-analyst/data/img/twov{ID}.png", format='png')
+   
     twov_df.to_csv(f"{C.DATA_URL}/cat-analyst/data/prep_data/twov{ID}.csv")
     
 def get_manna(data, ID, bf):
@@ -183,12 +221,31 @@ def get_manna(data, ID, bf):
     
     twov_df = twov_df.round(4)
     
-    ax = plt.subplot(111, frame_on=False)
-    ax.xaxis.set_visible(False)
-    ax.yaxis.set_visible(False)  
-    pd.plotting.table(ax, twov_df)  
-    
-    plt.savefig(f"{C.DATA_URL}/cat-analyst/data/img/twov{ID}.png")     
+    plt.clf()
+    fig_two = df2img.plot_dataframe(
+    twov_df,
+    title=dict(
+            font_color="black",
+            font_family="Times New Roman",
+            font_size=16,
+            text=f"Тест Манна-Уитни по признаку {bf}",
+        ),
+        tbl_header=dict(
+            align="right",
+            fill_color="pink",
+            font_color="black",
+            font_size=10,
+            line_color="black",
+        ),
+        tbl_cells=dict(
+            align="right",
+            line_color="black",
+        ),
+        row_fill_color=("#ffffff", "#ffffff"),
+        fig_size=(500, 70* len(num_features),
+    ))
+    fig_two.write_image(file=f"{C.DATA_URL}/cat-analyst/data/img/twov{ID}.png", format='png')  
+        
     twov_df.to_csv(f"{C.DATA_URL}/cat-analyst/data/prep_data/twov{ID}.csv")
 
 def get_corr_pearson(data, ID):
@@ -255,8 +312,38 @@ def get_corr_auto(data, ID):
     pval_df.to_csv(f"{C.DATA_URL}/cat-analyst/data/prep_data/p_val{ID}.csv")
     
 
-#def descriptive(data, ID): 
-#   data = data.copy
+def descriptive(data, ID): 
+    data = data.copy()
+    data_d = data.describe().round(3)
+    v=1
+    for i in range(0, data_d.shape[1], 9):
+        plt.clf()
+        fig_descriptive = df2img.plot_dataframe(
+        data_d.iloc[:, i:i+9],
+        title=dict(
+                font_color="black",
+                font_family="Times New Roman",
+                font_size=16,
+                text=f"Описательная статистика количественных признаков {str(v*(data_d.shape[1]>9)).replace('0', ' ')}",
+            ),
+            tbl_header=dict(
+                align="right",
+                fill_color="pink",
+                font_color="black",
+                font_size=10,
+                line_color="black",
+            ),
+            tbl_cells=dict(
+                align="right",
+                line_color="black",
+            ),
+            row_fill_color=("#ffffff", "#ffffff"),
+            fig_size=(data_d.iloc[:, i:i+9].shape[1]*120, 300),
+        )
+        fig_descriptive.write_image(file=f"{C.DATA_URL}/cat-analyst/data/img/descriptive{v}_{ID}.png", format='png')
+        v+=1
+
+
 
     
     

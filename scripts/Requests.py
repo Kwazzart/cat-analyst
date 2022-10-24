@@ -75,7 +75,7 @@ async def get_buttons_callbacks(update, context):
         ID = update.effective_chat.id
         pd.read_csv(f"{input_url}/D{ID}.csv", index_col=0).to_csv(f"{prepdata_url}/D{ID}.csv")
 
-        buttons = create_buttons([('Описательная статистика (графики)', 'desc122121218821827178')])
+        buttons = create_buttons(('Описательная статистика (графики)', 'desc122121218821827178'))
         await context.bot.send_message(
             chat_id = update.effective_chat.id,
             text = "Окей, что будем делать дальше?",
@@ -92,7 +92,7 @@ async def get_buttons_callbacks(update, context):
         global BF
         BF = pd.read_csv(f"{prepdata_url}/binf{ID}.csv", index_col=0).index.values
         
-        await context.bot.send_message(chat_id = update.effective_chat.id, text = f'Данные обработаны. Теперь анализ пойдёт как по маслу!\n\nВсе качественные признаки: {", ".join(cat_features)}\nВ том числе бинарные (2 уникальных значений): {", ".join(bin_features)}\n\nКоличественные признаки: {", ".join(num_features)}')
+        await context.bot.send_message(chat_id = update.effective_chat.id, text = f'Данные обработаны. Теперь анализ пойдёт как по маслу!\n\nВсе качественные признаки: {", ".join(cat_features)}\n\nВ том числе бинарные (2 уникальных значений): {", ".join(bin_features)}\n\nКоличественные признаки: {", ".join(num_features)}')
         
         text = f"Удалённые признаки по критерию потерянных значений (>70%):\n{', '.join(na_drops)}\n\nУдалённые признаки по критерию уникальных качественных значений на тысячу объектов (>30/1000):\n{', '.join(many_drops)}\n\nСколько осталось значений после удаления выбросов:\n{r_after} из {r_before}"
         await context.bot.send_message(
@@ -202,7 +202,12 @@ async def get_buttons_callbacks(update, context):
     
     elif 'desc122121218821827178' in q_data:
         ID = str(update.effective_chat.id)
-        data = pd.read_csv(f"{C.DATA_URL}/cat-analyst/data/inputs/D{ID}.csv", index_col=0)
+        data = pd.read_csv(f"{prepdata_url}/D{ID}.csv", index_col=0)
+        descriptive(data, ID)
+        for i in range(1, 10, 1):
+            if os.path.isfile(f"{img_url}/descriptive{i}_{ID}.png"): 
+                await send_desc_files(update, context, f"{img_url}/descriptive{i}_{ID}.png")
+                await remove_outputs(f"{img_url}/descriptive{i}_{ID}.png")
         
     else:    
         for bf in BF:
@@ -211,8 +216,8 @@ async def get_buttons_callbacks(update, context):
                     ID = update.effective_chat.id 
                     data = pd.read_csv(f"{prepdata_url}/D{ID}.csv", index_col=0)
                     get_twov(data, ID, bf)
-                    await send_file(update, context, f"{prepdata_url}/twov{ID}.csv", "t-test_data.csv")
-                    await send_file(update, context, f"{img_url}/twov{ID}.png", "t-test_data.png")
+                    await send_file(update, context, f"{prepdata_url}/twov{ID}.csv", "auto_t-test_data.csv")
+                    await send_file(update, context, f"{img_url}/twov{ID}.png", "auto_t-test_data.png")
                     await remove_outputs(f"{prepdata_url}/twov{ID}.csv", f"{img_url}/twov{ID}.png")
             
             elif C.TWOV == "t":
@@ -229,8 +234,8 @@ async def get_buttons_callbacks(update, context):
                     ID = update.effective_chat.id 
                     data = pd.read_csv(f"{prepdata_url}/D{ID}.csv", index_col=0)
                     get_manna(data, ID, bf)
-                    await send_file(update, context, f"{prepdata_url}/twov{ID}.csv", "t-test_data.csv")
-                    await send_file(update, context, f"{img_url}/twov{ID}.png", "t-test_data.png")
+                    await send_file(update, context, f"{prepdata_url}/twov{ID}.csv", "man_t-test_data.csv")
+                    await send_file(update, context, f"{img_url}/twov{ID}.png", "man_t-test_data.png")
                     await remove_outputs(f"{prepdata_url}/twov{ID}.csv", f"{img_url}/twov{ID}.png")
 
    
