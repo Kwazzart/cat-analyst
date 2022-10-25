@@ -52,6 +52,7 @@ def auto_preproccecing(data, data_vars, ID):
     isna_df = data.isna().sum()/len(data)
     na_features_to_drop = isna_df[isna_df >= 0.7].index.values
     
+    #imputation
     for feature in data_vars["cat_features"]:
         data[feature] = data[feature].fillna(data[feature].mode()[0])
     for feature in data_vars["num_features"]:
@@ -70,7 +71,8 @@ def auto_preproccecing(data, data_vars, ID):
     skew_df["skew"] = stats.skew(data.select_dtypes(np.number))
     for feature in skew_df.loc[np.abs(skew_df["skew"]) > 1.5].index.values:
         if data[feature].min() >= 0:
-            data[feature] = np.log1p(data[feature])
+            data[f"{feature}_log"] = np.log1p(data[feature])
+            data = data.drop([feature], axis=1)
     skew_df["skew_new"] = stats.skew(data.select_dtypes(np.number))
     rows_before = data.shape[0]
     rows_after = data.shape[0]
@@ -110,6 +112,7 @@ def get_twov(data, ID, bf):
     twov_df = pd.DataFrame({"Features":num_features}).set_index("Features")
     
     for col in num_features:
+        
         value, p_val = stats.ttest_ind(df1[col], df2[col])
         value, p_val = np.round(value, 4), np.round(p_val, 4)
         twov_df.loc[col, "Two-Sided p-value"] = "test_value: " + str(value) + "-" + "p_val: " + str(p_val)
@@ -204,15 +207,13 @@ def get_manna(data, ID, bf):
     
     twov_df.to_csv(f"{C.DATA_URL}/cat-analyst/data/prep_data/twov{ID}.csv")
 
-def get_corr_pearson(data, ID):
+def get_corr_pearson(data, data_vars, ID):
     data = data.copy()
-    with open(f"{C.DATA_URL}/cat-analyst/data/prep_data/data_vars{ID}.txt", "r") as file:
-        data_vars = ast.literal_eval(file.read())
-    num_features = data_vars["num_features"]
-    corr = data[num_features].corr()
+    
+    corr = data[data_vars["num_features"]].corr()
     corr = corr.round(4)
     
-    cols = data[num_features].columns.array
+    cols = data[data_vars["num_features"]].columns.array
     pval_df = pd.DataFrame()
     for col1 in cols:
         for col2 in cols:
@@ -228,15 +229,13 @@ def get_corr_pearson(data, ID):
     corr.to_csv(f"{C.DATA_URL}/cat-analyst/data/prep_data/corr{ID}.csv")
     pval_df.to_csv(f"{C.DATA_URL}/cat-analyst/data/prep_data/p_val{ID}.csv")
 
-def get_corr_spearman(data, ID):
+def get_corr_spearman(data, data_vars, ID):
     data = data.copy()
-    with open(f"{C.DATA_URL}/cat-analyst/data/prep_data/data_vars{ID}.txt", "r") as file:
-        data_vars = ast.literal_eval(file.read())
-    num_features = data_vars["num_features"]
-    corr = data[num_features].corr(method = "spearman")
+    
+    corr = data[data_vars["num_features"]].corr(method = "spearman")
     corr = corr.round(4)
     
-    cols = data[num_features].columns.array
+    cols = data[data_vars["num_features"]].columns.array
     pval_df = pd.DataFrame()
     for col1 in cols:
         for col2 in cols:
@@ -252,15 +251,13 @@ def get_corr_spearman(data, ID):
     corr.to_csv(f"{C.DATA_URL}/cat-analyst/data/prep_data/corr{ID}.csv")
     pval_df.to_csv(f"{C.DATA_URL}/cat-analyst/data/prep_data/p_val{ID}.csv")
 
-def get_corr_auto(data, ID):
+def get_corr_auto(data, data_vars, ID):
     data = data.copy()
-    with open(f"{C.DATA_URL}/cat-analyst/data/prep_data/data_vars{ID}.txt", "r") as file:
-        data_vars = ast.literal_eval(file.read())
-    num_features = data_vars["num_features"]
-    corr = data[num_features].corr()
+    
+    corr = data[data_vars["num_features"]].corr()
     corr = corr.round(4)
     
-    cols = data.select_dtypes(np.number).columns.array
+    cols = data[data_vars["num_features"]].columns.array
     pval_df = pd.DataFrame()
     for col1 in cols:
         for col2 in cols:

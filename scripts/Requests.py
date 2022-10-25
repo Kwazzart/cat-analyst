@@ -91,6 +91,7 @@ async def get_buttons_callbacks(update, context):
         with open(f"{prepdata_url}/data_vars{ID}.txt", "r") as file:
             data_vars = ast.literal_eval(file.read())
         data, na_drops, many_drops, r_before, r_after, cat_features, num_features, bin_features = auto_preproccecing(data, data_vars, ID)
+        get_data_variables(data, ID)
         
         await context.bot.send_message(chat_id = update.effective_chat.id, text = f'Данные обработаны. Теперь анализ пойдёт как по маслу!\n\nВсе качественные признаки: {", ".join(cat_features)}\n\nВ том числе бинарные (2 уникальных значений): {", ".join(bin_features)}\n\nКоличественные признаки: {", ".join(num_features)}')
         
@@ -197,68 +198,151 @@ async def get_buttons_callbacks(update, context):
         ID = str(update.effective_chat.id)
         data = pd.read_csv(f"{prepdata_url}/D{ID}.csv", index_col=0)
         
-        get_corr_pearson(data, ID)
+        with open(f"{prepdata_url}/data_vars{ID}.txt", "r") as file:
+            data_vars = ast.literal_eval(file.read())
+        
+        get_corr_pearson(data, data_vars, ID)
         await send_corr_files(update, context, f"{prepdata_url}/corr{ID}.csv", f"{prepdata_url}/p_val{ID}.csv", f"{img_url}/snscorr{ID}.png")
         await remove_outputs(f"{prepdata_url}/corr{ID}.csv", f"{prepdata_url}/p_val{ID}.csv", f"{img_url}/snscorr{ID}.png") 
             
     elif f'sperman{button_text}' in q_data:
-        ID = str(update.effective_chat.id)
+        ID = update.effective_chat.id
         data = pd.read_csv(f"{prepdata_url}/D{ID}.csv", index_col=0)
         
-        get_corr_spearman(data, ID)
+        with open(f"{prepdata_url}/data_vars{ID}.txt", "r") as file:
+            data_vars = ast.literal_eval(file.read())
+        
+        get_corr_spearman(data, data_vars, ID)
         await send_corr_files(update, context, f"{prepdata_url}/corr{ID}.csv", f"{prepdata_url}/p_val{ID}.csv", f"{img_url}/snscorr{ID}.png")
         await remove_outputs(f"{prepdata_url}/corr{ID}.csv", f"{prepdata_url}/p_val{ID}.csv", f"{img_url}/snscorr{ID}.png")
             
     elif f'pirson{button_text}' in q_data:
-        ID = str(update.effective_chat.id)
+        ID = update.effective_chat.id
         data = pd.read_csv(f"{prepdata_url}/D{ID}.csv", index_col=0)
         
-        get_corr_pearson(data, ID)
+        with open(f"{prepdata_url}/data_vars{ID}.txt", "r") as file:
+            data_vars = ast.literal_eval(file.read())
+        
+        get_corr_pearson(data, data_vars, ID)
         await send_corr_files(update, context, f"{prepdata_url}/corr{ID}.csv", f"{prepdata_url}/p_val{ID}.csv", f"{img_url}/snscorr{ID}.png") 
         await remove_outputs(f"{prepdata_url}/corr{ID}.csv", f"{prepdata_url}/p_val{ID}.csv", f"{img_url}/snscorr{ID}.png")
     
     elif f'desc{button_text}' in q_data:
-        ID = str(update.effective_chat.id)
+        ID = update.effective_chat.id
         data = pd.read_csv(f"{prepdata_url}/D{ID}.csv", index_col=0)
         descriptive(data, ID)
         for i in range(1, 10, 1):
             if os.path.isfile(f"{img_url}/descriptive{i}_{ID}.png"): 
                 await send_img(update, context, f"{img_url}/descriptive{i}_{ID}.png")
                 await remove_outputs(f"{img_url}/descriptive{i}_{ID}.png")
+                
+    elif f'ml{button_text}' in q_data:
+        ID = update.effective_chat.id
+        buttons = create_buttons(('Регрессия', f'reg{button_text}'),
+                                  ('Классификация', f'clf{button_text}'))
+        await context.bot.send_message(chat_id=ID, 
+                                       text="Выбери тип решаемой задачи:",
+                                       reply_markup = InlineKeyboardMarkup(buttons))
         
+    elif f'reg{button_text}' in q_data:
+        ID = update.effective_chat.id
+        buttons = create_buttons(('Параметрические методы регрессии', f'regparam{button_text}'),
+                                  ('Непараметрические методы регрессии', f'regnparam{button_text}')) 
+        await context.bot.send_message(chat_id=ID, 
+                                       text="Каким типом методов будем пользоваться для регрессии:",
+                                       reply_markup = InlineKeyboardMarkup(buttons))
+    
+    elif f'clf{button_text}' in q_data:
+        ID = update.effective_chat.id
+        buttons = create_buttons(('Параметрические методы классификации', f'clfparam{button_text}'),
+                                  ('Непараметрические методы классификации', f'clfnparam{button_text}'))
+        await context.bot.send_message(chat_id=ID, 
+                                       text="Каким типом методо будем пользоваться для классификации:",
+                                       reply_markup = InlineKeyboardMarkup(buttons))
+    
+    elif f'regparam{button_text}' in q_data:
+        ID = update.effective_chat.id
+        buttons = create_buttons(('Линейная регрессия', f'lin{button_text}'))
+        await context.bot.send_message(chat_id = ID,
+                                       text = "Выбери один из параметрических методов регрессии",
+                                       reply_markup = InlineKeyboardMarkup(buttons))
+        
+    elif f'regnparam{button_text}' in q_data:
+        ID = update.effective_chat.id
+        buttons = create_buttons(('Решающее дерево', f'dtree_r{button_text}'))
+        await context.bot.send_message(chat_id = ID,
+                                       text = "Выбери один из непараметрических методов регрессии",
+                                       reply_markup = InlineKeyboardMarkup(buttons))
+        
+    elif f'clfparam{button_text}' in q_data:
+        ID = update.effective_chat.id
+        buttons = create_buttons(('Логистическая регрессия', f'log{button_text}'))
+        await context.bot.send_message(chat_id = ID,
+                                       text = "Выбери один из параметрических методов классификации",
+                                       reply_markup = InlineKeyboardMarkup(buttons))
+        
+    elif f'clfnparam{button_text}' in q_data:
+        ID = update.effective_chat.id
+        buttons = create_buttons(('Решающее дерево', f'dtree_c{button_text}'))
+        await context.bot.send_message(chat_id = ID,
+                                       text = "Выбери один из непараметрических методов классификации",
+                                       reply_markup = InlineKeyboardMarkup(buttons))
+        
+    elif f'lin{button_text}' in q_data:
+        ID = update.effective_chat.id
+        with open(f"{prepdata_url}/data_vars{ID}.txt", "r") as file:
+            data_vars = ast.literal_eval(file.read())
+            
+        num_features = data_vars["num_features"]
+        buttons = create_buttons(*[(nf, f'{nf}{button_text}') for nf in num_features])
+        await context.bot.send_message(chat_id = ID,
+                                       text = "Выбери признак для которого будет произведена регрессия",
+                                       reply_markup = InlineKeyboardMarkup(buttons))
+        
+        data_vars["ml_mode"] = "linreg"  
+        with open(f"{prepdata_url}/data_vars{ID}.txt", "w") as file:
+            file.write(str(data_vars))
+            
     else:
         ID = update.effective_chat.id
         with open(f"{prepdata_url}/data_vars{ID}.txt", "r") as file:
             data_vars = ast.literal_eval(file.read())
+            
         BF = data_vars["bin_features"]
-        choice = data_vars["two_choice"]    
+        NF = data_vars["num_features"]
+        
+        for nf in NF:
+            if f"{nf}{button_text}" in q_data:
+                ml_mode = data_vars["ml_mode"]
+                ID = update.effective_chat.id 
+                data = pd.read_csv(f"{prepdata_url}/D{ID}.csv", index_col=0)
+                
+                if ml_mode == "linreg":
+                    pass
+                    #get_linreg(data, ID, nf)
+                
+                await send_file(update, context, f"{prepdata_url}/reg{ID}.csv", "regression.csv")
+                await send_img(update, context, f"{img_url}/reg{ID}.png", "regression.png")
+                await remove_outputs(f"{prepdata_url}/twov{ID}.csv", f"{img_url}/twov{ID}.png")       
+              
         for bf in BF:
-            if choice == "auto":
-                if f"{bf}{button_text}" in q_data:
-                    ID = update.effective_chat.id 
-                    data = pd.read_csv(f"{prepdata_url}/D{ID}.csv", index_col=0)
+            if f"{bf}{button_text}" in q_data:
+                choice = data_vars["two_choice"]
+                ID = update.effective_chat.id 
+                data = pd.read_csv(f"{prepdata_url}/D{ID}.csv", index_col=0)
+                
+                if choice == "auto":
                     get_twov(data, ID, bf)
-                    await send_file(update, context, f"{prepdata_url}/twov{ID}.csv", "auto_t-test_data.csv")
-                    await send_img(update, context, f"{img_url}/twov{ID}.png", "auto_t-test_data.png")
-                    await remove_outputs(f"{prepdata_url}/twov{ID}.csv", f"{img_url}/twov{ID}.png")
-            
-            elif choice == "t":
-                if f"{bf}{button_text}" in q_data:
-                    ID = update.effective_chat.id 
-                    data = pd.read_csv(f"{prepdata_url}/D{ID}.csv", index_col=0)
+                elif choice == "t":
                     get_ttest(data, ID, bf)
-                    await send_file(update, context, f"{prepdata_url}/twov{ID}.csv", "t-test_data.csv")
-                    await send_img(update, context, f"{img_url}/twov{ID}.png", "t-test_data.png")
-                    await remove_outputs(f"{prepdata_url}/twov{ID}.csv", f"{img_url}/twov{ID}.png")
-            
-            elif choice == "m":
-                if f"{bf}{button_text}" in q_data:
-                    ID = update.effective_chat.id 
-                    data = pd.read_csv(f"{prepdata_url}/D{ID}.csv", index_col=0)
+                elif choice == "m":
                     get_manna(data, ID, bf)
-                    await send_file(update, context, f"{prepdata_url}/twov{ID}.csv", "man_t-test_data.csv")
-                    await send_img(update, context, f"{img_url}/twov{ID}.png", "man_t-test_data.png")
-                    await remove_outputs(f"{prepdata_url}/twov{ID}.csv", f"{img_url}/twov{ID}.png")
+                    
+                await send_file(update, context, f"{prepdata_url}/twov{ID}.csv", "auto_t-test_data.csv")
+                await send_img(update, context, f"{img_url}/twov{ID}.png", "auto_t-test_data.png")
+                await remove_outputs(f"{prepdata_url}/twov{ID}.csv", f"{img_url}/twov{ID}.png")
+            
+               
 
    
         
