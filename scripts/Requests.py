@@ -302,6 +302,36 @@ async def get_buttons_callbacks(update, context):
         data_vars["ml_mode"] = "linreg"  
         with open(f"{prepdata_url}/data_vars{ID}.txt", "w") as file:
             file.write(str(data_vars))
+    
+    elif f'log{button_text}' in q_data:
+        ID = update.effective_chat.id
+        with open(f"{prepdata_url}/data_vars{ID}.txt", "r") as file:
+            data_vars = ast.literal_eval(file.read())
+            
+        cat_features = data_vars["cat_features"]
+        buttons = create_buttons(*[(nf, f'{nf}{button_text}') for nf in cat_features])
+        await context.bot.send_message(chat_id = ID,
+                                       text = "Выбери признак для которого будет произведена регрессия",
+                                       reply_markup = InlineKeyboardMarkup(buttons))
+        
+        data_vars["ml_mode"] = "logreg"  
+        with open(f"{prepdata_url}/data_vars{ID}.txt", "w") as file:
+            file.write(str(data_vars))
+            
+    elif f'dtree_r{button_text}' in q_data:
+        ID = update.effective_chat.id
+        with open(f"{prepdata_url}/data_vars{ID}.txt", "r") as file:
+            data_vars = ast.literal_eval(file.read())
+            
+        num_features = data_vars["num_features"]
+        buttons = create_buttons(*[(nf, f'{nf}{button_text}') for nf in num_features])
+        await context.bot.send_message(chat_id = ID,
+                                       text = "Выбери признак для которого будет произведена регрессия",
+                                       reply_markup = InlineKeyboardMarkup(buttons))
+        
+        data_vars["ml_mode"] = "tree"  
+        with open(f"{prepdata_url}/data_vars{ID}.txt", "w") as file:
+            file.write(str(data_vars))
             
     else:
         ID = update.effective_chat.id
@@ -310,6 +340,7 @@ async def get_buttons_callbacks(update, context):
             
         BF = data_vars["bin_features"]
         NF = data_vars["num_features"]
+        CF = data_vars["cat_features"]
         
         for nf in NF:
             if f"{nf}{button_text}" in q_data:
@@ -320,10 +351,26 @@ async def get_buttons_callbacks(update, context):
                 if ml_mode == "linreg":
                     pass
                     #get_linreg(data, ID, nf)
+                if ml_mode == "tree":
+                    get_tree_regression(data, ID, nf)
                 
                 await send_file(update, context, f"{prepdata_url}/reg{ID}.csv", "regression.csv")
                 await send_img(update, context, f"{img_url}/reg{ID}.png", "regression.png")
-                await remove_outputs(f"{prepdata_url}/twov{ID}.csv", f"{img_url}/twov{ID}.png")       
+                await remove_outputs(f"{prepdata_url}/twov{ID}.csv", f"{img_url}/twov{ID}.png")     
+                
+        for cf in CF:
+            if f"{cf}{button_text}" in q_data:
+                ml_mode = data_vars["ml_mode"]
+                ID = update.effective_chat.id 
+                data = pd.read_csv(f"{prepdata_url}/D{ID}.csv", index_col=0)
+                
+                if ml_mode == "logreg":
+                    pass
+                    #get_linreg(data, ID, nf)
+                
+                await send_file(update, context, f"{prepdata_url}/reg{ID}.csv", "regression.csv")
+                await send_img(update, context, f"{img_url}/reg{ID}.png", "regression.png")
+                await remove_outputs(f"{prepdata_url}/twov{ID}.csv", f"{img_url}/twov{ID}.png")   
               
         for bf in BF:
             if f"{bf}{button_text}" in q_data:

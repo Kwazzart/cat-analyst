@@ -6,6 +6,17 @@ import Constants as C
 import scipy.stats as stats
 import df2img
 import ast
+from optuna import create_study
+
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor, plot_tree
+from sklearn.metrics import mean_absolute_error, mean_squared_error, accuracy_score, classification_report
+from sklearn.model_selection import KFold, cross_val_score
+from sklearn.preprocessing import MinMaxScaler
+
+img_url = f"{C.DATA_URL}/cat-analyst/data/img"
+prepdata_url = f"{C.DATA_URL}/cat-analyst/data/prep_data"
+input_url = f"{C.DATA_URL}/cat-analyst/data/inputs"
+button_text = 122121218821827178
 
 pd.set_option('display.float_format', lambda x: '%.3f' % x)
 
@@ -71,8 +82,8 @@ def auto_preproccecing(data, data_vars, ID):
     skew_df["skew"] = stats.skew(data.select_dtypes(np.number))
     for feature in skew_df.loc[np.abs(skew_df["skew"]) > 1.5].index.values:
         if data[feature].min() >= 0:
-            data[f"{feature}_log"] = np.log1p(data[feature])
-            data = data.drop([feature], axis=1)
+            data[feature] = np.log1p(data[feature])
+            #data = data.drop([feature], axis=1)
     skew_df["skew_new"] = stats.skew(data.select_dtypes(np.number))
     rows_before = data.shape[0]
     rows_after = data.shape[0]
@@ -210,6 +221,9 @@ def get_manna(data, ID, bf):
 def get_corr_pearson(data, data_vars, ID):
     data = data.copy()
     
+    with open(f"{prepdata_url}/data_vars{ID}.txt", "r") as file:
+            data_vars = ast.literal_eval(file.read())
+    
     corr = data[data_vars["num_features"]].corr()
     corr = corr.round(4)
     
@@ -231,6 +245,9 @@ def get_corr_pearson(data, data_vars, ID):
 
 def get_corr_spearman(data, data_vars, ID):
     data = data.copy()
+    
+    with open(f"{prepdata_url}/data_vars{ID}.txt", "r") as file:
+            data_vars = ast.literal_eval(file.read())
     
     corr = data[data_vars["num_features"]].corr(method = "spearman")
     corr = corr.round(4)
@@ -254,6 +271,9 @@ def get_corr_spearman(data, data_vars, ID):
 def get_corr_auto(data, data_vars, ID):
     data = data.copy()
     
+    with open(f"{prepdata_url}/data_vars{ID}.txt", "r") as file:
+            data_vars = ast.literal_eval(file.read())
+    
     corr = data[data_vars["num_features"]].corr()
     corr = corr.round(4)
     
@@ -272,6 +292,47 @@ def get_corr_auto(data, data_vars, ID):
     fig.savefig(f"{C.DATA_URL}/cat-analyst/data/img/snscorr{ID}.png")
     corr.to_csv(f"{C.DATA_URL}/cat-analyst/data/prep_data/corr{ID}.csv")
     pval_df.to_csv(f"{C.DATA_URL}/cat-analyst/data/prep_data/p_val{ID}.csv")
+    
+def get_tree_regression(data, ID, target):
+    data = data.copy()
+    train = data.loc[~data[target].isna(), :]
+    #test = data.loc[data[target].isna(), :]
+    
+    with open(f"{prepdata_url}/data_vars{ID}.txt", "r") as file:
+            data_vars = ast.literal_eval(file.read())
+    
+    target_df = train[target]
+    X_TRAIN = train.drop(target, axis=1)
+    #X_TEST = test.drop(target, axis=1)
+    num_features = data_vars["num_features"]
+    num_features = num_features.copy()
+    num_features.remove(target)
+    X_TRAIN = pd.concat([X_TRAIN[num_features], pd.get_dummies(X_TRAIN[num_features])], axis=1)
+    #X_TEST = pd.concat([X_TEST[num_features], pd.get_dummies(X_TEST[num_features])], axis=1)
+    
+    kf = KFold(n_splits=10)
+    
+    def objective(trial):
+        params = {"criterion": trial.suggest_categorical("criterion",['squared_error', 'absolute_error']),
+                 # "max_features": trial.suggest_categorical("max_features",['auto', 'sqrt', 'log2']),
+                  "max_depth": trial.suggest_int("max_depth", 2,14),
+                  "min_samples_split": trial.suggest_int("min_samples_split",2,12),
+                  "min_samples_leaf": trial.suggest_int("min_samples_leaf", 1,12),}
+        tree = DecisionTreeRegressor(**params)
+        tree.fit(X_TRAIN, target_df)
+        score = -(cross_val_score(tree, X_TRAIN, target_df, scoring="neg_mean_squared_error")).mean()
+        return score
+    
+    tree_study = create_study(direction="minimize")
+    tree_study.optimize(objective, n_trials=40)
+    
+    best_model = DecisionTreeRegressor(**tree_study.best_params)
+    best_model.fit(X_TRAIN, target_df)
+    best_score = tree_study.best_trial
+    #prediction = best_model.predict(X_TEST)
+    plot_tree(best_model)
+    plt.show()
+    
     
 
 def descriptive(data, ID): 
