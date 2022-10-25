@@ -5,6 +5,7 @@ import numpy as np
 import Constants as C
 import scipy.stats as stats
 import df2img
+import ast
 
 pd.set_option('display.float_format', lambda x: '%.3f' % x)
 
@@ -14,41 +15,46 @@ def read_data(ID):
 
 def get_data_variables(data, ID):
     data = data.copy()
-    n_samples, n_features = data.shape
-    cat_features = list(data.select_dtypes("O").columns.array)
-    n_cat_features = len(cat_features)
-    num_features = list(data.select_dtypes(np.number).columns.array)
-    n_num_features = len(num_features)
     n_nan = data.isna().sum().sum()
-    
+
+    for col in data.columns:
+        data[col] = data[col].fillna(data[col].mode()[0])
+
+    n_samples, n_features = data.shape
+    cat_features = []
+    num_features = []
+    bin_features = []
+
+    for col in data.columns:
+        if data[col].dtypes == "O" or data[col].nunique()==2:
+            cat_features.append(col)
+            if data[col].nunique()==2:
+                bin_features.append(col)
+        else:
+            num_features.append(col)
+
+    n_bin_features = len(bin_features)
+    n_cat_features = len(cat_features)
+    n_num_features = len(num_features)
+
     var_dict = {"n_samples":n_samples, "n_features":n_features,
-            "cat_features":", ".join(cat_features), "n_cat_features":n_cat_features,
-            "num_features":", ".join(num_features), "n_num_features":n_num_features, "n_nan":n_nan}
-    
-    #with open(f"{C.DATA_URL}/cat-analyst/data/prep_data/data_vars{ID}.txt", "r") as file:
-    #    file.write(var_dict)
+    "cat_features":cat_features, "n_cat_features":n_cat_features,
+    "num_features":num_features, "n_num_features":n_num_features,
+    "bin_features":bin_features, "n_bin_features":n_bin_features, "n_nan":n_nan}
+
+    with open(f"{C.DATA_URL}/cat-analyst/data/prep_data/data_vars{ID}.txt", "w") as file:
+        file.write(str(var_dict))
+
     return var_dict
 
-def auto_preproccecing(data, ID):
+def auto_preproccecing(data, data_vars, ID):
     data = data.copy()
     isna_df = data.isna().sum()/len(data)
     na_features_to_drop = isna_df[isna_df >= 0.7].index.values
     
-    cat_features = []
-    num_features = []
-    binary_features = []
-    for feature in data.columns:
-        if data[feature].dtypes == "O" or data[feature].nunique() == 2:
-            data[feature] = data[feature].map(lambda x: str(x)+"(categorical)")
-            cat_features.append(feature)
-            if data[feature].nunique() == 2:
-                binary_features.append(feature)
-        else:
-            num_features.append(feature)
-    
-    for feature in cat_features:
+    for feature in data_vars["cat_features"]:
         data[feature] = data[feature].fillna(data[feature].mode()[0])
-    for feature in num_features:
+    for feature in data_vars["num_features"]:
         data[feature] = data[feature].fillna(data[feature].median())
         
     nunique_df = pd.DataFrame()
@@ -86,9 +92,8 @@ def auto_preproccecing(data, ID):
 
     skew_df.to_csv(f"{C.DATA_URL}/cat-analyst/data/prep_data/skew_df{ID}.csv")
     data.to_csv(f"{C.DATA_URL}/cat-analyst/data/prep_data/D{ID}.csv")
-    pd.DataFrame({"Bin_Features":binary_features}).set_index("Bin_Features").to_csv(f"{C.DATA_URL}/cat-analyst/data/prep_data/binf{ID}.csv")
 
-    return data, na_features_to_drop, many_unique_values_features_to_drop, rows_before, rows_after, cat_features, num_features, binary_features
+    return data, na_features_to_drop, many_unique_values_features_to_drop, rows_before, rows_after, data_vars["cat_features"], data_vars["num_features"], data_vars["bin_features"]
 
 def get_twov(data, ID, bf):
     data = data.copy()
@@ -97,7 +102,10 @@ def get_twov(data, ID, bf):
     df1 = data[data[bf]==f1]
     df2 = data[data[bf]==f2]
     
-    num_features = data.select_dtypes(np.number).columns.values
+    
+    with open(f"{C.DATA_URL}/cat-analyst/data/prep_data/data_vars{ID}.txt", "r") as file:
+        data_vars = ast.literal_eval(file.read())
+    num_features = data_vars["num_features"]
     
     twov_df = pd.DataFrame({"Features":num_features}).set_index("Features")
     
@@ -116,30 +124,12 @@ def get_twov(data, ID, bf):
     
     twov_df = twov_df.round(4)
     
-    plt.clf()
-    fig_two = df2img.plot_dataframe(
-    twov_df,
-    title=dict(
-            font_color="black",
-            font_family="Times New Roman",
-            font_size=16,
-            text=f"Тест на две выборки по признаку {bf}",
-        ),
-        tbl_header=dict(
-            align="right",
-            fill_color="pink",
-            font_color="black",
-            font_size=10,
-            line_color="black",
-        ),
-        tbl_cells=dict(
-            align="right",
-            line_color="black",
-        ),
-        row_fill_color=("#ffffff", "#ffffff"),
-        fig_size=(500, 70* len(num_features),
-    ))
-    fig_two.write_image(file=f"{C.DATA_URL}/cat-analyst/data/img/twov{ID}.png", format='png')   
+    ax = plt.subplot(111, frame_on=False) 
+    ax.xaxis.set_visible(False)  
+    ax.yaxis.set_visible(False)
+    pd.plotting.table(ax, twov_df)
+    plt.savefig(f"{C.DATA_URL}/cat-analyst/data/img/twov{ID}.png")
+    
     twov_df.to_csv(f"{C.DATA_URL}/cat-analyst/data/prep_data/twov{ID}.csv")
     
 def get_ttest(data, ID, bf):
@@ -149,7 +139,9 @@ def get_ttest(data, ID, bf):
     df1 = data[data[bf]==f1]
     df2 = data[data[bf]==f2]
     
-    num_features = data.select_dtypes(np.number).columns.values
+    with open(f"{C.DATA_URL}/cat-analyst/data/prep_data/data_vars{ID}.txt", "r") as file:
+        data_vars = ast.literal_eval(file.read())
+    num_features = data_vars["num_features"]
     
     twov_df = pd.DataFrame({"Features":num_features}).set_index("Features")
     
@@ -167,32 +159,13 @@ def get_ttest(data, ID, bf):
         twov_df.loc[col, f"{f1} less {f2} p-value"] = "test_value: " + str(value) + "-" + "p_val: " + str(p_val)
     
     twov_df = twov_df.round(4)
-    #
-    plt.clf()
-    fig_two = df2img.plot_dataframe(
-    twov_df,
-    title=dict(
-            font_color="black",
-            font_family="Times New Roman",
-            font_size=16,
-            text=f"t-test по признаку {bf}",
-        ),
-        tbl_header=dict(
-            align="right",
-            fill_color="pink",
-            font_color="black",
-            font_size=10,
-            line_color="black",
-        ),
-        tbl_cells=dict(
-            align="right",
-            line_color="black",
-        ),
-        row_fill_color=("#ffffff", "#ffffff"),
-        fig_size=(500, 70* len(num_features),
-    ))
-    fig_two.write_image(file=f"{C.DATA_URL}/cat-analyst/data/img/twov{ID}.png", format='png')
-   
+    
+    ax = plt.subplot(111, frame_on=False) 
+    ax.xaxis.set_visible(False)  
+    ax.yaxis.set_visible(False)
+    pd.plotting.table(ax, twov_df)
+    plt.savefig(f"{C.DATA_URL}/cat-analyst/data/img/twov{ID}.png")
+    
     twov_df.to_csv(f"{C.DATA_URL}/cat-analyst/data/prep_data/twov{ID}.csv")
     
 def get_manna(data, ID, bf):
@@ -202,58 +175,44 @@ def get_manna(data, ID, bf):
     df1 = data[data[bf]==f1]
     df2 = data[data[bf]==f2]
     
-    num_features = data.select_dtypes(np.number).columns.values
+    with open(f"{C.DATA_URL}/cat-analyst/data/prep_data/data_vars{ID}.txt", "r") as file:
+        data_vars = ast.literal_eval(file.read())
+    num_features = data_vars["num_features"]
     
     twov_df = pd.DataFrame({"Features":num_features}).set_index("Features")
     
     for col in num_features:
-        value, p_val = stats.ttest_ind(df1[col], df2[col])
+        value, p_val = stats.mannwhitneyu(df1[col], df2[col])
         value, p_val = np.round(value, 4), np.round(p_val, 4)
         twov_df.loc[col, "Two-Sided p-value"] = "test_value: " + str(value) + "-" + "p_val: " + str(p_val)
         
-        value, p_val = stats.ttest_ind(df1[col], df2[col], alternative="greater")
+        value, p_val = stats.mannwhitneyu(df1[col], df2[col], alternative="greater")
         value, p_val = np.round(value, 4), np.round(p_val, 4)
         twov_df.loc[col, f"{f1} greater {f2} p-value"] = "test_value: " + str(value) + "-" + "p_val: " + str(p_val)
         
-        value, p_val = stats.ttest_ind(df1[col], df2[col], alternative="less")
+        value, p_val = stats.mannwhitneyu(df1[col], df2[col], alternative="less")
         value, p_val = np.round(value, 4), np.round(p_val, 4)
         twov_df.loc[col, f"{f1} less {f2} p-value"] = "test_value: " + str(value) + "-" + "p_val: " + str(p_val)
     
     twov_df = twov_df.round(4)
     
-    plt.clf()
-    fig_two = df2img.plot_dataframe(
-    twov_df,
-    title=dict(
-            font_color="black",
-            font_family="Times New Roman",
-            font_size=16,
-            text=f"Тест Манна-Уитни по признаку {bf}",
-        ),
-        tbl_header=dict(
-            align="right",
-            fill_color="pink",
-            font_color="black",
-            font_size=10,
-            line_color="black",
-        ),
-        tbl_cells=dict(
-            align="right",
-            line_color="black",
-        ),
-        row_fill_color=("#ffffff", "#ffffff"),
-        fig_size=(500, 70* len(num_features),
-    ))
-    fig_two.write_image(file=f"{C.DATA_URL}/cat-analyst/data/img/twov{ID}.png", format='png')  
-        
+    ax = plt.subplot(111, frame_on=False) 
+    ax.xaxis.set_visible(False)  
+    ax.yaxis.set_visible(False)
+    pd.plotting.table(ax, twov_df)
+    plt.savefig(f"{C.DATA_URL}/cat-analyst/data/img/twov{ID}.png")
+    
     twov_df.to_csv(f"{C.DATA_URL}/cat-analyst/data/prep_data/twov{ID}.csv")
 
 def get_corr_pearson(data, ID):
     data = data.copy()
-    corr = data.select_dtypes(np.number).corr()
+    with open(f"{C.DATA_URL}/cat-analyst/data/prep_data/data_vars{ID}.txt", "r") as file:
+        data_vars = ast.literal_eval(file.read())
+    num_features = data_vars["num_features"]
+    corr = data[num_features].corr()
     corr = corr.round(4)
     
-    cols = data.select_dtypes(np.number).columns.array
+    cols = data[num_features].columns.array
     pval_df = pd.DataFrame()
     for col1 in cols:
         for col2 in cols:
@@ -271,10 +230,13 @@ def get_corr_pearson(data, ID):
 
 def get_corr_spearman(data, ID):
     data = data.copy()
-    corr = data.select_dtypes(np.number).corr(method = "spearman")
+    with open(f"{C.DATA_URL}/cat-analyst/data/prep_data/data_vars{ID}.txt", "r") as file:
+        data_vars = ast.literal_eval(file.read())
+    num_features = data_vars["num_features"]
+    corr = data[num_features].corr(method = "spearman")
     corr = corr.round(4)
     
-    cols = data.select_dtypes(np.number).columns.array
+    cols = data[num_features].columns.array
     pval_df = pd.DataFrame()
     for col1 in cols:
         for col2 in cols:
@@ -292,7 +254,10 @@ def get_corr_spearman(data, ID):
 
 def get_corr_auto(data, ID):
     data = data.copy()
-    corr = data.select_dtypes(np.number).corr()
+    with open(f"{C.DATA_URL}/cat-analyst/data/prep_data/data_vars{ID}.txt", "r") as file:
+        data_vars = ast.literal_eval(file.read())
+    num_features = data_vars["num_features"]
+    corr = data[num_features].corr()
     corr = corr.round(4)
     
     cols = data.select_dtypes(np.number).columns.array

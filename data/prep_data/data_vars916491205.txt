@@ -1,0 +1,1 @@
+{'n_samples': 891, 'n_features': 12, 'cat_features': ['Survived', 'Name', 'Sex', 'Ticket', 'Cabin', 'Embarked'], 'n_cat_features': 6, 'num_features': ['PassengerId', 'Pclass', 'Age', 'SibSp', 'Parch', 'Fare'], 'n_num_features': 6, 'bin_features': ['Survived', 'Sex'], 'n_bin_features': 2, 'n_nan': 866, 'two_choice': 'auto'}
