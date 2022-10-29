@@ -331,9 +331,8 @@ def get_tree_regression(data, ID, target):
     best_score = tree_study.best_trial
     #prediction = best_model.predict(X_TEST)
     plot_tree(best_model)
-    plt.show()
-    
-    
+    plt.savefig(f"{C.DATA_URL}/cat-analyst/data/img/reg{ID}.png")
+    return best_score
 
 def descriptive(data, ID): 
     data = data.copy()

@@ -352,9 +352,10 @@ async def get_buttons_callbacks(update, context):
                     pass
                     #get_linreg(data, ID, nf)
                 if ml_mode == "tree":
-                    get_tree_regression(data, ID, nf)
+                    score = get_tree_regression(data, ID, nf)
                 
-                await send_file(update, context, f"{prepdata_url}/reg{ID}.csv", "regression.csv")
+                #await send_file(update, context, f"{prepdata_url}/reg{ID}.csv", "regression.csv")
+                await context.bot.send_message(chat_id = ID, text=str(score))
                 await send_img(update, context, f"{img_url}/reg{ID}.png", "regression.png")
                 await remove_outputs(f"{prepdata_url}/twov{ID}.csv", f"{img_url}/twov{ID}.png")     
                 
