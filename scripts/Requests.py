@@ -10,40 +10,6 @@ img_url = f"{C.DATA_URL}/cat-analyst/data/img"
 prepdata_url = f"{C.DATA_URL}/cat-analyst/data/prep_data"
 input_url = f"{C.DATA_URL}/cat-analyst/data/inputs"
 button_text = 122121218821827178
-
-async def start(update, context): 
-    '''  '''
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id, 
-        text='Привет, я Кот-Аналитик!\nПришли мне csv файл своих данных, и я проанализирую их за тебя! Очень удобно!\n\nТОЛЬКО УЧТИ! Тебе следует убедиться, что качественные признаки в твоих данных (например: пол, цвет, страна и т.п.) имеют текстовые значения, а не числовые!\n\nЕсли возникнут вопросы, пиши /help'
-    )
-    
-async def instraction(update, context):
-    await context.bot.send_message(   
-        chat_id = update.effective_chat.id,
-        text = "Для работы со мной тебе следует отправить файл формата .csv с твоими данными. ОЧЕНЬ ВАЖНО - убедись, что значения качественных признаков введены текстом, а не числом (Пол 1,0 должны быть мужчина, женщина, например). Сделаем нашу совместную работу проще!"
-    )
-    
-async def help(update, context):
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id, 
-        text="Вот список команд, которые я знаю:\n/start - Приветственная команда с требованием к данным\n/instraction - инструкция по работе со мной\n"
-        )
-    
-async def echo(update, context):
-    text = update.message.text.lower()
-    if "люблю" in text:
-         await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text = "Я тебя люблю :3"
-        )   
-         
-async def unknown(update, context):
-    text = 'Прости, я не знаю такую команду :(.\nНапиши /help, чтобы я смог помочь тебе!'
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text=text
-    )
     
 async def get_document(update, context):
     ''' Получает данные от пользователя и сохраняет на диск сырые данные и основные "переменные" данных '''
@@ -361,7 +327,12 @@ async def get_buttons_callbacks(update, context):
                 
         for cf in CF:
             if f"{cf}{button_text}" in q_data:
-                ml_mode = data_vars["ml_mode"]
+                
+                try:
+                    ml_mode = data_vars["ml_mode"]
+                except:
+                    ml_mode = ""
+                    
                 ID = update.effective_chat.id 
                 data = pd.read_csv(f"{prepdata_url}/D{ID}.csv", index_col=0)
                 
@@ -369,9 +340,12 @@ async def get_buttons_callbacks(update, context):
                     pass
                     #get_linreg(data, ID, nf)
                 
-                await send_file(update, context, f"{prepdata_url}/reg{ID}.csv", "regression.csv")
-                await send_img(update, context, f"{img_url}/reg{ID}.png", "regression.png")
-                await remove_outputs(f"{prepdata_url}/twov{ID}.csv", f"{img_url}/twov{ID}.png")   
+                try:
+                    await send_file(update, context, f"{prepdata_url}/reg{ID}.csv", "regression.csv")
+                    await send_img(update, context, f"{img_url}/reg{ID}.png", "regression.png")
+                    await remove_outputs(f"{prepdata_url}/twov{ID}.csv", f"{img_url}/twov{ID}.png")
+                except:
+                    pass   
               
         for bf in BF:
             if f"{bf}{button_text}" in q_data:
