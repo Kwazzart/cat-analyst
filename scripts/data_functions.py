@@ -115,26 +115,41 @@ def get_twov(data, ID, bf):
     df1 = data[data[bf]==f1]
     df2 = data[data[bf]==f2]
     
-    
     with open(f"{C.DATA_URL}/cat-analyst/data/prep_data/data_vars{ID}.txt", "r") as file:
         data_vars = ast.literal_eval(file.read())
     num_features = data_vars["num_features"]
     
     twov_df = pd.DataFrame({"Features":num_features}).set_index("Features")
+    text_output = {}
     
     for col in num_features:
-        
-        value, p_val = stats.ttest_ind(df1[col], df2[col])
-        value, p_val = np.round(value, 4), np.round(p_val, 4)
-        twov_df.loc[col, "Two-Sided p-value"] = "test_value: " + str(value) + "-" + "p_val: " + str(p_val)
-        
-        value, p_val = stats.ttest_ind(df1[col], df2[col], alternative="greater")
-        value, p_val = np.round(value, 4), np.round(p_val, 4)
-        twov_df.loc[col, f"{f1} greater {f2} p-value"] = "test_value: " + str(value) + "-" + "p_val: " + str(p_val)
-        
-        value, p_val = stats.ttest_ind(df1[col], df2[col], alternative="less")
-        value, p_val = np.round(value, 4), np.round(p_val, 4)
-        twov_df.loc[col, f"{f1} less {f2} p-value"] = "test_value: " + str(value) + "-" + "p_val: " + str(p_val)
+        if stats.shapiro(data[col])[1] > 0.05:
+            value, p_val = stats.ttest_ind(df1[col], df2[col])
+            value, p_val = np.round(value, 4), np.round(p_val, 4)
+            twov_df.loc[col, "Two-Sided p-value"] = "test_value: " + str(value) + "-" + "p_val: " + str(p_val)
+            
+            value, p_val = stats.ttest_ind(df1[col], df2[col], alternative="greater")
+            value, p_val = np.round(value, 4), np.round(p_val, 4)
+            twov_df.loc[col, f"{f1} greater {f2} p-value"] = "test_value: " + str(value) + "-" + "p_val: " + str(p_val)
+            
+            value, p_val = stats.ttest_ind(df1[col], df2[col], alternative="less")
+            value, p_val = np.round(value, 4), np.round(p_val, 4)
+            twov_df.loc[col, f"{f1} less {f2} p-value"] = "test_value: " + str(value) + "-" + "p_val: " + str(p_val)
+            text_output[col] = "t-test"
+            
+        else:
+            value, p_val = stats.mannwhitneyu(df1[col], df2[col])
+            value, p_val = np.round(value, 4), np.round(p_val, 4)
+            twov_df.loc[col, "Two-Sided p-value"] = "test_value: " + str(value) + "-" + "p_val: " + str(p_val)
+            
+            value, p_val = stats.mannwhitneyu(df1[col], df2[col], alternative="greater")
+            value, p_val = np.round(value, 4), np.round(p_val, 4)
+            twov_df.loc[col, f"{f1} greater {f2} p-value"] = "test_value: " + str(value) + "-" + "p_val: " + str(p_val)
+            
+            value, p_val = stats.mannwhitneyu(df1[col], df2[col], alternative="less")
+            value, p_val = np.round(value, 4), np.round(p_val, 4)
+            twov_df.loc[col, f"{f1} less {f2} p-value"] = "test_value: " + str(value) + "-" + "p_val: " + str(p_val)
+            text_output[col] = "mannwhitneyu"
     
     twov_df = twov_df.round(4)
     
@@ -145,6 +160,8 @@ def get_twov(data, ID, bf):
     plt.savefig(f"{C.DATA_URL}/cat-analyst/data/img/twov{ID}.png")
     
     twov_df.to_csv(f"{C.DATA_URL}/cat-analyst/data/prep_data/twov{ID}.csv")
+    
+    return text_output
     
 def get_ttest(data, ID, bf):
     data = data.copy()
@@ -270,6 +287,7 @@ def get_corr_spearman(data, data_vars, ID):
 
 def get_corr_auto(data, data_vars, ID):
     data = data.copy()
+    N = len(data)
     
     with open(f"{prepdata_url}/data_vars{ID}.txt", "r") as file:
             data_vars = ast.literal_eval(file.read())
@@ -279,10 +297,26 @@ def get_corr_auto(data, data_vars, ID):
     
     cols = data[data_vars["num_features"]].columns.array
     pval_df = pd.DataFrame()
+    text_corr_return = {}
+    seen_pairs = set()
     for col1 in cols:
         for col2 in cols:
-            _, p_val = stats.pearsonr(data[col1], data[col2])
+            _, pn1 = stats.shapiro(data[col1])
+            _, pn2 = stats.shapiro(data[col2])
+            if (pn1 > 0.05) and (pn2 > 0.05) or (N > 2000):
+                _, p_val = stats.pearsonr(data[col1], data[col2])
+                print(pn1, pn2)
+                if ((col1, col2) not in seen_pairs) and ((col2, col1) not in seen_pairs) and (col1 != col2):
+                    text_corr_return[f"{col1}---{col2}"] = "pearson"
+                    seen_pairs.add((col1, col2))
+            else:
+                _, p_val = stats.spearmanr(data[col1], data[col2])  
+                if ((col1, col2) not in seen_pairs) and ((col2, col1) not in seen_pairs) and (col1 != col2): 
+                    text_corr_return[f"{col1}---{col2}"] = "spearman"
+                    seen_pairs.add((col1, col2)) 
+                       
             pval_df.loc[col1, col2] = p_val
+            
     pval_df = pval_df.round(4)
     
     plt.clf()
@@ -292,6 +326,8 @@ def get_corr_auto(data, data_vars, ID):
     fig.savefig(f"{C.DATA_URL}/cat-analyst/data/img/snscorr{ID}.png")
     corr.to_csv(f"{C.DATA_URL}/cat-analyst/data/prep_data/corr{ID}.csv")
     pval_df.to_csv(f"{C.DATA_URL}/cat-analyst/data/prep_data/p_val{ID}.csv")
+    
+    return text_corr_return
     
 def get_tree_regression(data, ID, target):
     data = data.copy()

@@ -167,7 +167,12 @@ async def get_buttons_callbacks(update, context):
         with open(f"{prepdata_url}/data_vars{ID}.txt", "r") as file:
             data_vars = ast.literal_eval(file.read())
         
-        get_corr_pearson(data, data_vars, ID)
+        text_output_dict = get_corr_auto(data, data_vars, ID)
+        text = ""
+        for key, value in text_output_dict.items():
+            text += f"{key} - {value}\n"
+        await context.bot.send_message(chat_id = ID, text= 'Для всех нормально-распределённых величин использована корреляция Пирсона. \nДля остальных использована корреляция Спирмена!')
+        await context.bot.send_message(chat_id = ID, text= text)
         await send_corr_files(update, context, f"{prepdata_url}/corr{ID}.csv", f"{prepdata_url}/p_val{ID}.csv", f"{img_url}/snscorr{ID}.png")
         await remove_outputs(f"{prepdata_url}/corr{ID}.csv", f"{prepdata_url}/p_val{ID}.csv", f"{img_url}/snscorr{ID}.png") 
             
@@ -275,7 +280,7 @@ async def get_buttons_callbacks(update, context):
             data_vars = ast.literal_eval(file.read())
             
         cat_features = data_vars["cat_features"]
-        buttons = create_buttons(*[(nf, f'{nf}{button_text}') for nf in cat_features])
+        buttons = create_buttons(*[(cf, f'{cf}{button_text}') for cf in cat_features])
         await context.bot.send_message(chat_id = ID,
                                        text = "Выбери признак для которого будет произведена регрессия",
                                        reply_markup = InlineKeyboardMarkup(buttons))
@@ -349,21 +354,33 @@ async def get_buttons_callbacks(update, context):
               
         for bf in BF:
             if f"{bf}{button_text}" in q_data:
-                choice = data_vars["two_choice"]
+                
+                try:
+                    choice = data_vars["two_choice"]
+                except:
+                    choice = ""
+                    
                 ID = update.effective_chat.id 
                 data = pd.read_csv(f"{prepdata_url}/D{ID}.csv", index_col=0)
                 
                 if choice == "auto":
-                    get_twov(data, ID, bf)
+                    text_output = get_twov(data, ID, bf)
+                    text = ""
+                    for key, val in text_output.items():
+                        text += f"{key} - {val}\n"
+                    await context.bot.send_message(chat_id = ID, text = "Для нормальных распределений - t-test\n Для остальных - Манна-Уитни")    
+                    await context.bot.send_message(chat_id = ID, text = text)
                 elif choice == "t":
                     get_ttest(data, ID, bf)
                 elif choice == "m":
                     get_manna(data, ID, bf)
-                    
-                await send_file(update, context, f"{prepdata_url}/twov{ID}.csv", "auto_t-test_data.csv")
-                await send_img(update, context, f"{img_url}/twov{ID}.png", "auto_t-test_data.png")
-                await remove_outputs(f"{prepdata_url}/twov{ID}.csv", f"{img_url}/twov{ID}.png")
-            
+                
+                try:    
+                    await send_file(update, context, f"{prepdata_url}/twov{ID}.csv", "auto_t-test_data.csv")
+                    await send_img(update, context, f"{img_url}/twov{ID}.png", "auto_t-test_data.png")
+                    await remove_outputs(f"{prepdata_url}/twov{ID}.csv", f"{img_url}/twov{ID}.png")
+                except:
+                    pass
                
 
    
